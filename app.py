@@ -550,6 +550,7 @@ class MyApp:
         self.create_title()
         self.create_netflix_button()
         self.set_light()
+        self.create_ssh_button()
     
     def create_netflix_button(self):
         
@@ -561,6 +562,8 @@ class MyApp:
         self.button_netflix.grid(padx=10,pady=10,row=0,column=0)
         #self.button_netflix = Button(self.space,text="Netflix",font=("Courrier",25), bg='white',fg='#41B77F',command=self.open_netflix)
         #self.button_netflix.pack(anchor=NW)
+
+
 
     def open_netflix(self):
         self.video_source = 0
@@ -621,7 +624,16 @@ class MyApp:
         cmd=f"sudo brightnessctl -d intel_backlight -c backlight s {var}%"
         os.system(cmd)
 
- 
+    def create_ssh_button(self):
+        ### Menu ssh
+        self.image_ssh = PhotoImage(file=f"{self.file}Images/Home/netflix.png").zoom(1) #.subsample(32)
+        self.image_ssh = self.image_ssh.subsample(7)
+        self.button_ssh = Button(self.menu_home,image=self.image_ssh,bg='#888989',command=self.open_ssh())
+        self.button_ssh.grid(padx=10,pady=10,row=0,column=2)
+
+    def open_ssh(self):
+        cmd='sudo /etc/init.d/ssh start'
+        os.system(cmd)
 
     def create_title(self):
         self.label_title = Label(self.menu_home, text="207 CC", font=("Courrier", 30), bg='#5d6efc',
