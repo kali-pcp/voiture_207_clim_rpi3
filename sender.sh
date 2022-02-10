@@ -84,8 +84,8 @@ do
     
     done < ${file}
 
-    echo "1D0# ${manuel_auto_pareprise_fan} 00 ${speed_fan} ${position_fan} ${recycle_air_fan} ${temp_fan_LEFT} ${temp_fan_RIGHT}"   ### Send DATA TO CLIM
+    #echo "1D0# ${manuel_auto_pareprise_fan} 00 ${speed_fan} ${position_fan} ${recycle_air_fan} ${temp_fan_LEFT} ${temp_fan_RIGHT}"   ### Send DATA TO CLIM
     #cansend can0 1D0#${manuel_auto_pareprise_fan}00${speed_fan}${position_fan}${recycle_air_fan}${temp_fan_LEFT}${temp_fan_RIGHT} ### Plus activer car speed low
     echo "1D0#${manuel_auto_pareprise_fan}00${speed_fan}${position_fan}${recycle_air_fan}${temp_fan_LEFT}${temp_fan_RIGHT}" > ${canoutput}
-    sleep 0.5s
+    sleep 1s
 done

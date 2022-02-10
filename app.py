@@ -5,10 +5,13 @@ import sys
 import webbrowser
 import os
 from time import sleep
+import cv2
+import PIL.Image, PIL.ImageTk
 
 class MyApp:
 
     def __init__(self):
+        #self.file="/home/tony/Documents/USB2CAN/Application_Voiture/voiture_207_clim_rpi3/"
         self.file="/home/pi/Desktop/"
         self.window = Tk()
         #Included directly after imports at top of program
@@ -41,6 +44,7 @@ class MyApp:
         #### Variable
         self.bue_arriere_status=False
         self.bue_avant_status=False
+        self.cam_arrire = False
 
         bue_avant_status_get = self.get_data("manuel_auto_pareprise_fan=")
         if bue_avant_status_get == "21" or bue_avant_status_get == "11":
@@ -56,9 +60,8 @@ class MyApp:
         self.clear_widgets()
         #self.show_Menu_Home()
         self.show_Menu_Fan()
-        #cmd='sudo screen -d -m /home/pi/Desktop/start.sh'
-        #cmd = 'sudo systemctl start networking.service && sudo systemctl start wpa_supplicant.service && sudo systemctl start ssh.service && sudo systemctl start dhcpcd'
-        #os.system(cmd)
+
+
         cmd='sudo screen -d -m /home/pi/Desktop/start.sh'
         os.system(cmd)
 
@@ -96,8 +99,7 @@ class MyApp:
 
         self.menu.pack(expand=NO,side=LEFT)
 
-    def open_netflix(self):
-        webbrowser.open_new("https://www.netflix.com/browse")
+
 
     #######################################################################
     #                                FAN                                  #
@@ -527,6 +529,7 @@ class MyApp:
     def clear_home(self):
         if 'label_title' in dir(self):
             self.menu_home.pack_forget()
+            
             #self.label_title.destroy()
             #self.button_netflix.destroy()
 
@@ -546,18 +549,79 @@ class MyApp:
     def create_widgets(self):
         self.create_title()
         self.create_netflix_button()
+        self.set_light()
     
     def create_netflix_button(self):
+        
         ### Menu Netflix
         self.image_netflix = PhotoImage(file=f"{self.file}Images/Home/netflix.png").zoom(1) #.subsample(32)
         self.image_netflix = self.image_netflix.subsample(7)
         self.button_netflix = Button(self.menu_home,image=self.image_netflix,bg='#888989',command=self.open_netflix)
-        self.button_netflix.pack(padx=10,anchor=NW)
-
-
-        
+        #self.button_netflix.pack(padx=10,anchor=NW)
+        self.button_netflix.grid(padx=10,pady=10,row=0,column=0)
         #self.button_netflix = Button(self.space,text="Netflix",font=("Courrier",25), bg='white',fg='#41B77F',command=self.open_netflix)
         #self.button_netflix.pack(anchor=NW)
+
+    def open_netflix(self):
+        self.video_source = 0
+        #self.video_source = self.cam
+        #self.cam = self.cam+1
+        if self.cam_arrire :
+            self.vid.__del__()
+            self.canvas.destroy()
+        else:
+            self.vid = MyVideoCapture(self.video_source)
+            self.canvas = Canvas(self.menu_home, width = self.vid.width, height = self.vid.height)
+            self.canvas.place(x=200, y=200) #,relwidth=1, relheight=1
+        self.cam_arrire = not self.cam_arrire
+
+        # Button that lets the user take a snapshot
+        #self.btn_snapshot=tkinter.Button(window, text="Snapshot", width=50, command=self.snapshot)
+        #self.btn_snapshot.pack(anchor=tkinter.CENTER, expand=True)
+
+        # After it is called once, the update method will be automatically called every delay milliseconds
+        self.delay = 15
+        self.update()
+        #webbrowser.open_new("https://www.netflix.com/browse")
+
+    def returnCameraIndexes(self):
+        # checks the first 10 indexes.
+        index = 0
+        arr = []
+        i = 10
+        while i > 0:
+            cap = cv2.VideoCapture(index)
+            if cap.read()[0]:
+                arr.append(index)
+                cap.release()
+            index += 1
+            i -= 1
+        return arr
+
+    def update(self):
+    # Get a frame from the video source
+        if self.cam_arrire :
+            ret, frame = self.vid.get_frame()
+            if ret:
+                self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
+                self.canvas.create_image((self.vid.width/2), (self.vid.height/2), image = self.photo)
+            self.window.after(self.delay, self.update)
+        
+        
+
+    def set_light(self):
+        # changer la luminosité 
+        self.slider_luminositer = Scale(
+        self.menu_home,from_=0,to=100,orient='horizontal',command=self.slider_set_light,width=70,
+        troughcolor='#343b48',highlightcolor="#55aaff",showvalue=0,bd=0,bg="#4d4d7f")
+        #self.slider_luminositer.pack(padx=0, pady=0,anchor=NW)
+        self.slider_luminositer.grid(padx=10,pady=10,row=0,column=1)
+
+    def slider_set_light(self,var):
+        cmd=f"sudo brightnessctl -d intel_backlight -c backlight s {var}%"
+        os.system(cmd)
+
+ 
 
     def create_title(self):
         self.label_title = Label(self.menu_home, text="207 CC", font=("Courrier", 30), bg='#5d6efc',
@@ -590,12 +654,50 @@ class MyApp:
                     return line.replace(key,"").replace("\n","")
                     break
 
-    def create_circle(self,x, y, r, canvasName): #center coordinates, radius
-        x0 = x - r
-        y0 = y - r
-        x1 = x + r
-        y1 = y + r
-        return canvasName.create_oval(x0, y0, x1, y1)
+class MyVideoCapture:
+
+    def __init__(self, video_source=0):
+        # Open the video source
+        self.vid = cv2.VideoCapture(video_source)
+        if not self.vid.isOpened():
+            raise ValueError("Unable to open video source", video_source)
+
+        # Get video source width and height
+        self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        #self.width = self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        #self.height = self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+
+    def get_frame(self):
+        if self.vid.isOpened():
+            ret, frame = self.vid.read()
+            if ret:
+                # Return a boolean success flag and the current frame converted to BGR
+                return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            else:
+                    return (ret, None)
+        else:
+            return (ret, None)
+
+    # Release the video source when the object is destroyed
+    def __del__(self):
+        if self.vid.isOpened():
+            self.vid.release()
+
+    def returnCameraIndexes(video):
+        # checks the first 10 indexes.
+        index = 0
+        arr = []
+        i = 10
+        while i > 0:
+            cap = cv2.VideoCapture(index)
+            if cap.read()[0]:
+                arr.append(index)
+                cap.release()
+            index += 1
+            i -= 1
+        return arr
 
 # afficher
 app = MyApp()
