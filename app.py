@@ -687,7 +687,7 @@ class MyThread(Thread):
 
     def __init__(self,argument, **kwargs):
         super(MyThread, self).__init__(**kwargs)
-        self.bus = can.Bus(interface='socketcan',channel='vcan0',receive_own_messages=False)
+        self.bus = can.Bus(interface='socketcan',channel='can0',receive_own_messages=False)
         self.argument = argument
         self.manuel_auto_pareprise_fan = 0xA2
         self.speed_fan = 0x0F
