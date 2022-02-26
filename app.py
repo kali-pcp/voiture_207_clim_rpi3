@@ -17,7 +17,6 @@ class MyApp:
         #self.file="/home/tony/Documents/USB2CAN/Application_Voiture/voiture_207_clim_rpi3/"
         #self.file="/home/pi/Desktop/voiture_207_clim_rpi3/"
         self.file = str(subprocess.check_output("pwd", shell=True)).strip().replace("\\n'","").replace("b'","")+ "/"
-        print("ici",self.file)
         ### LOAD FAN 
         self.fan = MyThread("Salut")
         self.fan.start()
@@ -487,16 +486,16 @@ class MyApp:
         self.Active_Bluetooth()
 
     ## UPDATE 
-    def Active_UPDATE(self):
-        self.image_update = PhotoImage(file=f"{self.file}Images/Home/update.png").zoom(1) #.subsample(32)
-        self.image_update = self.image_update.subsample(7)
-        self.button_wifi = Button(self.menu_home,image=self.image_update,command=self.open_wifi)
-        self.button_wifi.grid(padx=10,pady=10,row=0,column=5)
+    # def Active_UPDATE(self):
+    #     self.image_update = PhotoImage(file=f"{self.file}Images/Home/update.png").zoom(1) #.subsample(32)
+    #     self.image_update = self.image_update.subsample(7)
+    #     self.button_wifi = Button(self.menu_home,image=self.image_update,command=self.open_wifi)
+    #     self.button_wifi.grid(padx=10,pady=10,row=0,column=5)
 
-    def open_update(self):
-        ch = os.system("pwd")
-        cmd=f'sudo screen -d -m {ch}/network.sh'
-        os.system(cmd)
+    # def open_update(self):
+    #     ch = os.system("pwd")
+    #     cmd=f'sudo screen -d -m {ch}/network.sh'
+    #     os.system(cmd)
 
     ## WIFI
     def Active_WIFI(self):
@@ -506,8 +505,7 @@ class MyApp:
         self.button_wifi.grid(padx=10,pady=10,row=0,column=5)
 
     def open_wifi(self):
-        ch = os.system("pwd")
-        cmd=f'sudo screen -d -m {ch}/network.sh'
+        cmd=f'sudo screen -d -m {self.file}network.sh'
         os.system(cmd)
 
     #Bluetooth
@@ -518,8 +516,7 @@ class MyApp:
         self.button_Bluetooth.grid(padx=10,pady=10,row=0,column=6)
 
     def open_Bluetooth(self):
-        ch = os.system("pwd")
-        cmd=f'sudo screen -d -m {ch}/bluetooth.sh'
+        cmd=f'sudo screen -d -m {self.file}bluetooth.sh'
         os.system(cmd)
 
     # NETFLIX
@@ -594,7 +591,7 @@ class MyApp:
 
     def create_ssh_button(self):
         ### Menu ssh
-        self.image_ssh = PhotoImage(file=f"{self.file}Images/Home/netflix.png").zoom(1) #.subsample(32)
+        self.image_ssh = PhotoImage(file=f"{self.file}Images/Home/ssh.png").zoom(1) #.subsample(32)
         self.image_ssh = self.image_ssh.subsample(7)
         self.button_ssh = Button(self.menu_home,image=self.image_ssh,bg='#888989',command=self.open_ssh())
         self.button_ssh.grid(padx=10,pady=10,row=0,column=2)
