@@ -9,12 +9,15 @@ import os
 from time import sleep
 import cv2
 import PIL.Image, PIL.ImageTk
+import subprocess
 
 class MyApp:
 
     def __init__(self):
-        self.file="/home/tony/Documents/USB2CAN/Application_Voiture/voiture_207_clim_rpi3/"
+        #self.file="/home/tony/Documents/USB2CAN/Application_Voiture/voiture_207_clim_rpi3/"
         #self.file="/home/pi/Desktop/voiture_207_clim_rpi3/"
+        self.file = str(subprocess.check_output("pwd", shell=True)).strip().replace("\\n'","").replace("b'","")+ "/"
+        print("ici",self.file)
         ### LOAD FAN 
         self.fan = MyThread("Salut")
         self.fan.start()
@@ -30,7 +33,7 @@ class MyApp:
         #self.window.minsize(480,360)
 
         #Disable the Mouse Pointer
-        #self.window.config(cursor="none")
+        self.window.config(cursor="none")
 
         self.fullscreen = Frame(self.window, bg="#888989")
         self.fullscreen.pack_propagate(0)
