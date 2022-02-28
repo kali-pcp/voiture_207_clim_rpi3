@@ -687,8 +687,9 @@ class MyThread(Thread):
 
     def __init__(self,argument, **kwargs):
         super(MyThread, self).__init__(**kwargs)
-        os.system("sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0")
-        print("salut")
+        #os.system("sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0")
+        print(subprocess.check_output("service dbus start && sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0", shell=True))
+        print("coucou")
         self.bus = can.Bus(interface='socketcan',channel='vcan0',receive_own_messages=False)
         self.argument = argument
         self.manuel_auto_pareprise_fan = 0xA2
