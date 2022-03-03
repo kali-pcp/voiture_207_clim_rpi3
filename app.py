@@ -697,7 +697,7 @@ class MyThread(Thread):
             print("oui")
         else:
             print("non") ## CREATE VIRTUAL CAN
-            subprocess.check_output("sudo ip link add dev can0 type vcan")
+            subprocess.check_output("sudo ip link add dev can0 type vcan",shell=True)
         print(subprocess.check_output("sudo modprobe can_raw && sudo modprobe can_dev && sudo insmod /home/pi/Desktop/voiture_207_clim_rpi3/usb2can/usb_8dev.ko && sudo ip link set can0 up type can bitrate 125000 sample-point 0.875", shell=True))
         self.bus = can.Bus(interface='socketcan',channel='can0',receive_own_messages=False)
         self.argument = argument
