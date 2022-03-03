@@ -691,6 +691,7 @@ class MyThread(Thread):
     def __init__(self,argument, **kwargs):
         super(MyThread, self).__init__(**kwargs)
         #print(subprocess.check_output("sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0", shell=True))
+        print(subprocess.check_output("sudo modprobe can_raw && sudo modprobe can_dev && sudo insmod /home/pi/usb2can/usb_8dev.ko && sudo ip link set can0 up type can bitrate 125000 sample-point 0.875", shell=True))
         self.bus = can.Bus(interface='socketcan',channel='can0',receive_own_messages=False)
         self.argument = argument
         self.manuel_auto_pareprise_fan = 0xA2
