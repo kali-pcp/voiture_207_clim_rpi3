@@ -691,6 +691,13 @@ class MyThread(Thread):
     def __init__(self,argument, **kwargs):
         super(MyThread, self).__init__(**kwargs)
         #print(subprocess.check_output("sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0", shell=True))
+        test = str(subprocess.check_output("echo cc$(sudo ip a | grep can0)", shell=True)).strip().replace("\\n'","").replace("b'","")
+        print(test)
+        if len(test) > 2:
+            print("oui")
+        else:
+            print("non") ## CREATE VIRTUAL CAN
+            subprocess.check_output("sudo ip link add dev can0 type vcan")
         print(subprocess.check_output("sudo modprobe can_raw && sudo modprobe can_dev && sudo insmod /home/pi/Desktop/voiture_207_clim_rpi3/usb2can/usb_8dev.ko && sudo ip link set can0 up type can bitrate 125000 sample-point 0.875", shell=True))
         self.bus = can.Bus(interface='socketcan',channel='can0',receive_own_messages=False)
         self.argument = argument
