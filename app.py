@@ -15,8 +15,9 @@ class MyApp:
 
     def __init__(self):
         #self.file="/home/tony/Documents/USB2CAN/Application_Voiture/voiture_207_clim_rpi3/"
-        #self.file="/home/pi/Desktop/voiture_207_clim_rpi3/"
-        self.file = str(subprocess.check_output("pwd", shell=True)).strip().replace("\\n'","").replace("b'","")+ "/"
+        self.file="/home/pi/Desktop/voiture_207_clim_rpi3/"
+        #self.file = str(subprocess.check_output("pwd", shell=True)).strip().replace("\\n'","").replace("b'","")+ "/"
+        print("ici",self.file)
         ### LOAD FAN 
         self.fan = MyThread("Salut")
         self.fan.start()
@@ -70,7 +71,7 @@ class MyApp:
         self.show_Menu_Fan()
 
 
-        cmd='sudo screen -d -m /home/pi/Desktop/start.sh'
+        #cmd='sudo screen -d -m /home/pi/Desktop/start.sh'
         #os.system(cmd)
 
     def clear_widgets(self):
@@ -486,16 +487,16 @@ class MyApp:
         self.Active_Bluetooth()
 
     ## UPDATE 
-    # def Active_UPDATE(self):
-    #     self.image_update = PhotoImage(file=f"{self.file}Images/Home/update.png").zoom(1) #.subsample(32)
-    #     self.image_update = self.image_update.subsample(7)
-    #     self.button_wifi = Button(self.menu_home,image=self.image_update,command=self.open_wifi)
-    #     self.button_wifi.grid(padx=10,pady=10,row=0,column=5)
+    def Active_UPDATE(self):
+        self.image_update = PhotoImage(file=f"{self.file}Images/Home/update.png").zoom(1) #.subsample(32)
+        self.image_update = self.image_update.subsample(7)
+        self.button_wifi = Button(self.menu_home,image=self.image_update,command=self.open_wifi)
+        self.button_wifi.grid(padx=10,pady=10,row=0,column=5)
 
-    # def open_update(self):
-    #     ch = os.system("pwd")
-    #     cmd=f'sudo screen -d -m {ch}/network.sh'
-    #     os.system(cmd)
+    def open_update(self):
+        ch = os.system("pwd")
+        cmd=f'sudo screen -d -m {ch}/network.sh'
+        os.system(cmd)
 
     ## WIFI
     def Active_WIFI(self):
@@ -505,7 +506,8 @@ class MyApp:
         self.button_wifi.grid(padx=10,pady=10,row=0,column=5)
 
     def open_wifi(self):
-        cmd=f'sudo screen -d -m {self.file}network.sh'
+        ch = os.system("pwd")
+        cmd=f'sudo screen -d -m {ch}/network.sh'
         os.system(cmd)
 
     #Bluetooth
@@ -516,7 +518,8 @@ class MyApp:
         self.button_Bluetooth.grid(padx=10,pady=10,row=0,column=6)
 
     def open_Bluetooth(self):
-        cmd=f'sudo screen -d -m {self.file}bluetooth.sh'
+        ch = os.system("pwd")
+        cmd=f'sudo screen -d -m {ch}/bluetooth.sh'
         os.system(cmd)
 
     # NETFLIX
@@ -591,7 +594,7 @@ class MyApp:
 
     def create_ssh_button(self):
         ### Menu ssh
-        self.image_ssh = PhotoImage(file=f"{self.file}Images/Home/ssh.png").zoom(1) #.subsample(32)
+        self.image_ssh = PhotoImage(file=f"{self.file}Images/Home/netflix.png").zoom(1) #.subsample(32)
         self.image_ssh = self.image_ssh.subsample(7)
         self.button_ssh = Button(self.menu_home,image=self.image_ssh,bg='#888989',command=self.open_ssh())
         self.button_ssh.grid(padx=10,pady=10,row=0,column=2)
@@ -687,9 +690,7 @@ class MyThread(Thread):
 
     def __init__(self,argument, **kwargs):
         super(MyThread, self).__init__(**kwargs)
-        #os.system("sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0")
-        print(subprocess.check_output("service dbus start && sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0", shell=True))
-        print("coucou")
+        print(subprocess.check_output("sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0", shell=True))
         self.bus = can.Bus(interface='socketcan',channel='vcan0',receive_own_messages=False)
         self.argument = argument
         self.manuel_auto_pareprise_fan = 0xA2
@@ -943,7 +944,6 @@ class MyThread(Thread):
 
 
 # afficher
-
 app = MyApp()
 app.window.mainloop()
 
