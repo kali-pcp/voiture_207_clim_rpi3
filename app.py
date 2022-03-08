@@ -15,12 +15,25 @@ class MyApp:
 
     def __init__(self):
         #self.file="/home/tony/Documents/USB2CAN/Application_Voiture/voiture_207_clim_rpi3/"
-        self.file="/home/pi/Desktop/voiture_207_clim_rpi3/"
+        #self.file="/home/pi/Desktop/voiture_207_clim_rpi3/"
+        #self.file=str(os.getcwd())+"/"
+        dirname, filename = os.path.split(os.path.abspath(__file__))
+        print("running from", dirname)
+        print("file is", filename)
+        self.file = dirname + "/"
+        #print(os.getcwd())
         #self.file = str(subprocess.check_output("pwd", shell=True)).strip().replace("\\n'","").replace("b'","")+ "/"
         print("ici",self.file)
         ### LOAD FAN 
         self.fan = MyThread("Salut")
+        print("Fan OK")
         self.fan.start()
+        print("Fan Start OK")
+        # VAR AFTER UPDATE SPEED
+        self.manuel_auto_pareprise_fan = self.fan.manuel_auto_pareprise_fan
+        self.get_recyclage_air = self.fan.get_recyclage_air()
+        self.btn_bue_status = self.fan.btn_bue_status
+        self.get_position_fan = self.fan.get_position_fan()
 
         self.window = Tk()
         #Included directly after imports at top of program
@@ -54,12 +67,12 @@ class MyApp:
         self.bue_arriere_status=False
         self.bue_avant_status=False
         self.cam_arrire = False
-
-        bue_avant_status_get = self.get_data("manuel_auto_pareprise_fan=")
+        
+        bue_avant_status_get = self.fan.manuel_auto_pareprise_fan
         if bue_avant_status_get == "21" or bue_avant_status_get == "11":
             self.bue_avant_status=True
         
-
+        print("--- MENU ----")
         self.menu = Frame(self.fullscreen,width=110, height=580, bg='#888989',bd=1)
         self.menu.pack_propagate(0)
         self.menu.pack(side=LEFT, expand=False)
@@ -68,11 +81,8 @@ class MyApp:
         self.init_Menu_Fan()
         self.clear_widgets()
         #self.show_Menu_Home()
+        print("-- SHOW MENU FAN --")
         self.show_Menu_Fan()
-
-
-        #cmd='sudo screen -d -m /home/pi/Desktop/start.sh'
-        #os.system(cmd)
 
     def clear_widgets(self):
         #Home
@@ -123,12 +133,13 @@ class MyApp:
         self.menu_fan.pack(fill='both',expand=YES)#,side=BOTTOM
     
     def init_Menu_Fan(self):
-        self.menu_fan = Frame(self.space,width=700,height=500,bg='#4d4d7f',bd=0,highlightthickness=0)
+        background_color = '#c6c6dd' #4d4d7f
+        self.menu_fan = Frame(self.space,width=700,height=500,bg=background_color,bd=0,highlightthickness=0)
 
 
-        self.label_espace = Label(self.menu_fan,text="",bg='#4d4d7f',bd=0,highlightthickness=0)
+        self.label_espace = Label(self.menu_fan,text="",bg=background_color,bd=0,highlightthickness=0)
         self.label_espace.grid(ipady=70,row=1,column=0)
-        self.label_espace_droite = Label(self.menu_fan,text="",bg='#4d4d7f',bd=0,highlightthickness=0)
+        self.label_espace_droite = Label(self.menu_fan,text="",bg=background_color,bd=0,highlightthickness=0)
         self.label_espace_droite.grid(ipady=70,row=1,column=3)
 
 
@@ -158,7 +169,7 @@ class MyApp:
         ### Recyclage D'air OK
         self.image_recycle_aire = PhotoImage(file=f'{self.file}Images/Fan/Recycle_{self.fan.get_recyclage_air()}.png').zoom(1) #.subsample(32)
         self.image_recycle_aire = self.image_recycle_aire.subsample(6, 6)
-        self.button_image_recycle_aire = Button(self.menu_fan,image=self.image_recycle_aire,bg='#4d4d7f', fg='#4d4d7f',
+        self.button_image_recycle_aire = Button(self.menu_fan,image=self.image_recycle_aire,bg=background_color, fg='#4d4d7f',
         activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.recyclage_air, self.Update_Menu_Fan))
         self.button_image_recycle_aire.grid(row=3,column=1)
 
@@ -167,13 +178,13 @@ class MyApp:
         ### Boutton Ventilo OK
         self.image_speed_fan_up = PhotoImage(file=f'{self.file}Images/Fan/Speed.png').zoom(1) #.subsample(32)
         self.image_speed_fan_up = self.image_speed_fan_up.subsample(6, 6)
-        self.button_image_speed_fan_up = Button(self.menu_fan,image=self.image_speed_fan_up,bg='#4d4d7f', fg='#4d4d7f',
+        self.button_image_speed_fan_up = Button(self.menu_fan,image=self.image_speed_fan_up,bg=background_color, fg='#4d4d7f',
         activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.set_speed_up , self.Update_Menu_Fan))
         #self.button_image_speed_fan_up.grid(ipady=50,stick=N,row=1,column=1)
 
         self.image_speed_fan_down = PhotoImage(file=f'{self.file}Images/Fan/Speed.png').zoom(1) #.subsample(32)
         self.image_speed_fan_down = self.image_speed_fan_down.subsample(8, 8)
-        self.button_image_speed_fan_down = Button(self.menu_fan,image=self.image_speed_fan_down,bg='#4d4d7f', fg='#4d4d7f',
+        self.button_image_speed_fan_down = Button(self.menu_fan,image=self.image_speed_fan_down,bg=background_color, fg='#4d4d7f',
         activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.set_speed_down , self.Update_Menu_Fan))
         #self.button_image_speed_fan_down.grid(ipady=0,stick=S,row=1,column=1)
 
@@ -184,19 +195,19 @@ class MyApp:
         ### Bouton HAUT bue_avant 
         self.image_fan_bue_avant = PhotoImage(file=f'{self.file}Images/Fan/bue_{self.fan.btn_bue_status}.png').zoom(1) #.subsample(32)
         self.image_fan_bue_avant = self.image_fan_bue_avant.subsample(3, 3)
-        self.button_image_fan_bue_avant = Button(self.menu_fan,image=self.image_fan_bue_avant,bg='#4d4d7f', fg='#4d4d7f',
+        self.button_image_fan_bue_avant = Button(self.menu_fan,image=self.image_fan_bue_avant,bg=background_color, fg='#4d4d7f',
         activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.bue_one_click , self.Update_Menu_Fan))
         #self.button_image_fan_bue_avant.pack(padx=15,pady=50,anchor=CENTER)
         self.button_image_fan_bue_avant.grid(row=0,column=0)
 
         self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{self.fan.manuel_auto_pareprise_fan}.png').zoom(1) #.subsample(32)
         self.image_auto = self.image_auto.subsample(3, 3)
-        self.button_image_auto = Button(self.menu_fan,image=self.image_auto,bg='#4d4d7f', fg='#4d4d7f',activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.change_position_Manuel_auto_ac , self.Update_Menu_Fan))
+        self.button_image_auto = Button(self.menu_fan,image=self.image_auto,bg=background_color, fg='#4d4d7f',activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.change_position_Manuel_auto_ac , self.Update_Menu_Fan))
         self.button_image_auto.grid(row=0,column=1)
 
         self.image_fan_s_c = PhotoImage(file=f'{self.file}Images/Fan/position_{self.fan.get_position_fan()}.png').zoom(1) #.subsample(32)
         self.image_fan_s_c = self.image_fan_s_c.subsample(3, 3)
-        self.button_image_fan_s_c = Button(self.menu_fan,image=self.image_fan_s_c,bg='#4d4d7f', fg='#4d4d7f',activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.change_position_fan , self.Update_Menu_Fan))
+        self.button_image_fan_s_c = Button(self.menu_fan,image=self.image_fan_s_c,bg=background_color, fg='#4d4d7f',activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.change_position_fan , self.Update_Menu_Fan))
         self.button_image_fan_s_c.grid(row=0,column=2)
 
         self.menu_fan.pack_forget()
@@ -207,37 +218,41 @@ class MyApp:
         ## UPDATE MANUEL | AUTO | OFF | AUTO AC
         manuel_auto_fan = self.fan.manuel_auto_pareprise_fan ### UPDATE IMAGE MANUEL
         #if manuel_auto_fan != 0xA2:
-        self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{manuel_auto_fan}.png').zoom(1) 
-        self.image_auto = self.image_auto.subsample(3, 3)
-        self.button_image_auto.configure(image=self.image_auto)
-        ## CACHER SPEED
-        if manuel_auto_fan == 0x22 or manuel_auto_fan == 0x11 or manuel_auto_fan == 0x62 or manuel_auto_fan == 0x21:
-            if self.fan.get_speed() != 15:
-                self.slider_speed_fan_label.grid(stick=N,row=2,column=1)
-                self.slider_speed_fan_label.configure(text=self.fan.get_speed())
-        else:
-            self.button_image_speed_fan_up.grid_forget()
-            self.button_image_speed_fan_down.grid_forget()
-            self.slider_speed_fan_label.grid_forget()
-
-
-
+        if self.fan.manuel_auto_pareprise_fan != manuel_auto_fan:
+            self.manuel_auto_pareprise_fan = self.fan.manuel_auto_pareprise_fan ## UPDATE VAR SPEED
+            self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{manuel_auto_fan}.png').zoom(1) 
+            self.image_auto = self.image_auto.subsample(3, 3)
+            self.button_image_auto.configure(image=self.image_auto)
+            ## CACHER SPEED
+            if manuel_auto_fan == 0x22 or manuel_auto_fan == 0x11 or manuel_auto_fan == 0x62 or manuel_auto_fan == 0x21:
+                if self.fan.get_speed() != 15:
+                    self.slider_speed_fan_label.grid(stick=N,row=2,column=1)
+                    self.slider_speed_fan_label.configure(text=self.fan.get_speed())
+            else:
+                self.button_image_speed_fan_up.grid_forget()
+                self.button_image_speed_fan_down.grid_forget()
+                self.slider_speed_fan_label.grid_forget()
 
         ## UPDATE AIR RECYCLE
-        self.image_recycle_aire = PhotoImage(file=f'{self.file}Images/Fan/Recycle_{self.fan.get_recyclage_air()}.png').zoom(1)
-        self.image_recycle_aire = self.image_recycle_aire.subsample(6, 6)
-        self.button_image_recycle_aire.configure(image=self.image_recycle_aire)
+        if self.get_recyclage_air != self.fan.get_recyclage_air():
+            self.get_recyclage_air = self.fan.get_recyclage_air()
+            self.image_recycle_aire = PhotoImage(file=f'{self.file}Images/Fan/Recycle_{self.fan.get_recyclage_air()}.png').zoom(1)
+            self.image_recycle_aire = self.image_recycle_aire.subsample(6, 6)
+            self.button_image_recycle_aire.configure(image=self.image_recycle_aire)
 
         ## UPDATE Bue 
-        self.image_fan_bue_avant = PhotoImage(file=f'{self.file}Images/Fan/bue_{self.fan.btn_bue_status}.png').zoom(1)
-        self.image_fan_bue_avant = self.image_fan_bue_avant.subsample(3, 3)
-        self.button_image_fan_bue_avant.configure(image=self.image_fan_bue_avant)
+        if self.btn_bue_status != self.fan.btn_bue_status : 
+            self.btn_bue_status = self.fan.btn_bue_status
+            self.image_fan_bue_avant = PhotoImage(file=f'{self.file}Images/Fan/bue_{self.fan.btn_bue_status}.png').zoom(1)
+            self.image_fan_bue_avant = self.image_fan_bue_avant.subsample(3, 3)
+            self.button_image_fan_bue_avant.configure(image=self.image_fan_bue_avant)
 
         ### POSITION FAN
-        self.image_fan_s_c = PhotoImage(file=f'{self.file}Images/Fan/position_{self.fan.get_position_fan()}.png').zoom(1) #.subsample(32)
-        self.image_fan_s_c = self.image_fan_s_c.subsample(3, 3)
-        self.button_image_fan_s_c.configure(image=self.image_fan_s_c)
-
+        if self.get_position_fan != self.fan.get_position_fan():
+            self.get_position_fan = self.fan.get_position_fan()
+            self.image_fan_s_c = PhotoImage(file=f'{self.file}Images/Fan/position_{self.fan.get_position_fan()}.png').zoom(1) #.subsample(32)
+            self.image_fan_s_c = self.image_fan_s_c.subsample(3, 3)
+            self.button_image_fan_s_c.configure(image=self.image_fan_s_c)
 
     def combineFunc(self, *funcs):
         def conbinedFunc(*args,**kwargs):
@@ -246,206 +261,16 @@ class MyApp:
         return conbinedFunc 
 
 
-    ################################################### Recylage D'aire FAN ############################
-
-    #def Recyclage_d_air_click(self):
-    #    recycle_air = self.get_data("recycle_air_fan=")
-    #    if recycle_air == "00": ### SI Désactiver alors activer
-    #        self.data_change('recycle_air_fan=00','recycle_air_fan=30')
-    #    else:
-    #        self.data_change('recycle_air_fan=30','recycle_air_fan=00')
-    #
-    #    self.image_recycle_aire = PhotoImage(file=f'{self.file}Images/Fan/Recycle_{self.get_data("recycle_air_fan=")}.png').zoom(1) #.subsample(32)
-    #    self.image_recycle_aire = self.image_recycle_aire.subsample(6, 6)
-    #    self.button_image_recycle_aire.configure(image=self.image_recycle_aire)
-
     ######################################### TEMPERATURE FAN     ######################################
 
     def slider_changed_chaud_Gauche(self,var):
         self.slider_Chaud_gauche_label.configure(text=self.fan.convert_Temp_fan_slide_to_tmp(var))
-        #print(hex(self.fan.convert_Temp_fan_to_hexa(self.fan.convert_Temp_fan_slide_to_tmp(var))))
         self.fan.temp_fan_LEFT = self.fan.convert_Temp_fan_to_hexa(self.fan.convert_Temp_fan_slide_to_tmp(var))
-        ### Edite file 
-        #self.data_change(f'temp_fan_LEFT={self.get_data("temp_fan_LEFT=")}',f'temp_fan_LEFT={self.convert_Temp_fan_to_hexa(self.convert_Temp_fan_slide_to_tmp(var))}')
 
     def slider_changed_chaud_droit(self,var):
         self.slider_Chaud_droit_label.configure(text=self.fan.convert_Temp_fan_slide_to_tmp(var))
         self.fan.temp_fan_RIGHT = self.fan.convert_Temp_fan_to_hexa(self.fan.convert_Temp_fan_slide_to_tmp(var))
-        ## Edite file 
-        #self.data_change(f'temp_fan_RIGHT={self.get_data("temp_fan_RIGHT=")}',f'temp_fan_RIGHT={self.fan.convert_Temp_fan_to_hexa(self.fan.convert_Temp_fan_slide_to_tmp(var))}')
 
-    #def convert_Temp_fan_datafile_to_slide(self,cote): ### 01 = 1 ou 0A = 10
-    #    tmp_slide = int(self.get_data(f'temp_fan_{cote}='), base=16)
-    #    return tmp_slide
-
-    ######################################### AUTO FAN     ######################################
-
-    # def auto_ac_manuel_fan(self):
-    #     manuel_auto_fan = self.get_data("manuel_auto_pareprise_fan=")
-    #     after_manuel_auto_fan = manuel_auto_fan
-    #     if manuel_auto_fan == "20":
-    #         manuel_auto_fan = "00"  ### AUTO & A/C
-    #     elif manuel_auto_fan == "00":
-    #         manuel_auto_fan = "22"  ## Manuel
-    #     elif manuel_auto_fan == "22":
-    #         manuel_auto_fan = "20"  ## AUTO
-    #     elif manuel_auto_fan == "11" or manuel_auto_fan == "21": ##### Manuel = 11 et à 22  sinon désavtiver la bue avant
-    #         manuel_auto_fan = "20"  ## AUTO Update image de bue avant désactiver
-    #         self.image_fan_bue_avant = PhotoImage(file=f'{self.file}Images/Fan/bue_{self.bue_arriere_status}_False.png').zoom(1) #.subsample(32)
-    #         self.image_fan_bue_avant = self.image_fan_bue_avant.subsample(3, 3)
-    #         self.button_image_fan_bue_avant.configure(image=self.image_fan_bue_avant)
-    #     #after_manuel_auto_fan = self.fan.get_position_fan()
-    #     #manuel_auto_fan = self.fan.change_position_fan()
-    #     self.data_change(f'manuel_auto_pareprise_fan={after_manuel_auto_fan}',f'manuel_auto_pareprise_fan={manuel_auto_fan}')
-    #     self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{manuel_auto_fan}.png').zoom(1) #.subsample(32)
-    #     self.image_auto = self.image_auto.subsample(3, 3)
-    #     self.button_image_auto.configure(image=self.image_auto)
-
-    ######################################### POSITION FAN ######################################
-    # def position_fan(self):
-    #     self.fan.change_position_fan()
-    #     self.im = PhotoImage(file=f'{self.file}Images/Fan/position_{self.fan.get_position_fan()}.png').zoom(1) #.subsample(32)
-    #     self.im = self.im.subsample(3, 3)
-    #     self.button_image_fan_s_c.configure(image=self.im)
-
-    ######################################### BUE ######################################
-    # def bue_one_click(self):
-    #     ## de bases tous off
-    #     if self.bue_arriere_status == False and self.bue_avant_status == False: ## Activer bue avant 
-    #         self.bue_avant()
-    #         self.bue_avant_status = True
-    #     elif self.bue_arriere_status == False and self.bue_avant_status == True: ## Activer bue arriere 
-    #         self.bue_avant()
-    #         self.bue_avant_status = False
-    #         sleep(0.2)
-    #         self.bue_arriere()
-    #         self.bue_arriere_status = True
-    #     elif self.bue_arriere_status == True and self.bue_avant_status == False: ## Activer bue avant&arriere 
-    #         self.bue_avant()
-    #         self.bue_avant_status = True
-    #     elif self.bue_arriere_status == True and self.bue_avant_status == True: ## Désactiver bue avant&arriere 
-    #         self.bue_avant()
-    #         self.bue_avant_status = False
-    #         sleep(0.2)
-    #         self.bue_arriere()
-    #         self.bue_arriere_status = False
-    #     ### Image Update
-    #     self.image_fan_bue_avant = PhotoImage(file=f'{self.file}Images/Fan/bue_{self.bue_arriere_status}_{self.bue_avant_status}.png').zoom(1) #.subsample(32)
-    #     self.image_fan_bue_avant = self.image_fan_bue_avant.subsample(3, 3)
-    #     self.button_image_fan_bue_avant.configure(image=self.image_fan_bue_avant)
-
-    #     ### UPDATE MANUEL A/C
-    #     manuel_auto_fan = self.get_data("manuel_auto_pareprise_fan=")
-    #     if manuel_auto_fan != "62":
-    #         self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{self.get_data("manuel_auto_pareprise_fan=")}.png').zoom(1) #.subsample(32)
-    #         self.image_auto = self.image_auto.subsample(3, 3)
-    #         self.button_image_auto.configure(image=self.image_auto)
-
-    # def bue_avant(self):
-    #     status_bue = self.get_data_octet_1()
-    #     #if status_bue == "A2":
-    #     #    self.data_change(f'manuel_auto_pareprise_fan=A2',f'manuel_auto_pareprise_fan=21')
-    #     #status_bue = int(status_bue)
-    #     if status_bue == 21 or status_bue == 11 or status_bue == "A2": ## Si la souflerier es active alors désactiver
-    #         self.data_change(f'manuel_auto_pareprise_fan={status_bue}',f'manuel_auto_pareprise_fan=22')
-    #     else:                           
-    #         self.data_change(f'manuel_auto_pareprise_fan={status_bue}',f'manuel_auto_pareprise_fan=21')     #Activer la souflerie
-
-    # def bue_arriere(self):
-    #     status_bue = self.get_data_octet_1()
-    #     #status_bue = int(status_bue)
-    #     self.data_change(f'manuel_auto_pareprise_fan={status_bue}',f'manuel_auto_pareprise_fan=62')
-
-    # def get_data_octet_1(self):
-    #     with open(f'{self.file}data.txt') as f:
-    #         lines = f.readlines()
-    #         for line in lines:
-    #             if "manuel_auto_pareprise_fan=" in line:
-    #                 return line.replace("manuel_auto_pareprise_fan=","").replace("\n","")
-    #                 break
-
-    
-    
-    ################################################### SPEED FAN ############################ ### NOrmalment tout à supprimer 
-    # def slider_change_fan_speed(self,var):### 0  ### PAS UTILISER à SUPPRIMER 
-    #     speed=int(var)-1
-    #     fan_speed = self.get_speed_fan()
-    #     if fan_speed == "0F": ## Condition à rajouter car bug
-    #         self.fan_speed_up()
-    #     elif int(fan_speed) < int(hex(speed).replace("x","")):
-    #         self.fan_speed_up()
-    #     else:
-    #         self.fan_speed_down()
-    #     #sleep(0.5)
-    #     #self.slider_speed_fan_label.configure(text=self.get_speed_fan()) ### UPdate Label
-    #     self.slider_speed_fan_label.configure(text=speed) ### UPdate Label
-    #     #self.slider_speed_fan.set(var)
-
-    #     manuel_auto_fan = self.get_data("manuel_auto_pareprise_fan=")
-    #     if manuel_auto_fan != "62":
-    #         self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{self.get_data("manuel_auto_pareprise_fan=")}.png').zoom(1) #.subsample(32)
-    #         self.image_auto = self.image_auto.subsample(3, 3)
-    #         self.button_image_auto.configure(image=self.image_auto)
-
-    # def status_fan_speed(self):
-    #     speed = self.get_speed_fan()
-    #     speed = int(speed, base=16)
-    #     if speed == 15:
-    #         speed = "OFF"
-    #     return speed
-
-    # def fan_speed_up(self):
-    #     after_speed = self.get_speed_fan()
-    #     after_speed = int(after_speed, base=16)
-    #     print(str(after_speed))
-    #     if after_speed == 15:## Activer la clim
-    #         self.data_change(f'speed_fan=0F',### DATA SPEED
-    #         'speed_fan=00')
-            
-    #         self.data_change('manuel_auto_pareprise_fan=A2',### ACTIVE 1 Otect passage en manuel 
-    #         'manuel_auto_pareprise_fan=22')
-
-    #         manuel_auto_fan = self.get_data("manuel_auto_pareprise_fan=")### UPDATE IMAGE MANUEL
-    #         if manuel_auto_fan != "62":
-    #             self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{self.get_data("manuel_auto_pareprise_fan=")}.png').zoom(1) #.subsample(32)
-    #             self.image_auto = self.image_auto.subsample(3, 3)
-    #             self.button_image_auto.configure(image=self.image_auto)
-    #     elif after_speed != 7:
-    #         self.data_change(f'speed_fan={str(self.convert_speed_fan(after_speed))}',### DATA SPEED
-    #         f'speed_fan={str(self.convert_speed_fan(after_speed+1))}')
-    #     self.slider_speed_fan_label.configure(text=self.status_fan_speed())
-
-    # def fan_speed_down(self):
-    #     after_speed = self.get_speed_fan()
-    #     after_speed = int(after_speed, base=16)
-    #     #print(int(after_speed, base=16))
-    #     if after_speed == 0:## Désactiver car clim à 0 puis il la down soit -1
-    #         self.data_change('manuel_auto_pareprise_fan=22',### ACTIVE 1 Otect passage en manuel 
-    #         'manuel_auto_pareprise_fan=A2')
-    #         self.data_change('speed_fan=00',### DATA SPEED
-    #         'speed_fan=0F')
-
-    #         manuel_auto_fan = self.get_data("manuel_auto_pareprise_fan=")### UPDATE IMAGE MANUEL
-    #         if manuel_auto_fan != "62":
-    #             self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{self.get_data("manuel_auto_pareprise_fan=")}.png').zoom(1) #.subsample(32)
-    #             self.image_auto = self.image_auto.subsample(3, 3)
-    #             self.button_image_auto.configure(image=self.image_auto)
-    #     else:
-    #         self.data_change(f'speed_fan={str(self.convert_speed_fan(after_speed))}',### DATA SPEED
-    #         f'speed_fan={str(self.convert_speed_fan(after_speed-1))}')
-    #     self.slider_speed_fan_label.configure(text=self.status_fan_speed())
-
-    # def get_speed_fan(self):
-    #     with open(f'{self.file}data.txt') as f:
-    #         lines = f.readlines()
-    #         for line in lines:
-    #             if "speed_fan=" in line:
-    #                 #print(line.replace("speed_fan=",""))
-    #                 return line.replace("speed_fan=","").replace("\n","")
-    #                 break
-
-    # def convert_speed_fan(self,nb):
-    #     return hex(nb).replace("x","") 
 
     #########################################################################
     #                                Home                                   #
@@ -466,6 +291,7 @@ class MyApp:
             #self.button_netflix.destroy()
 
     def init_Menu_Home(self):
+        self.ssh = True
         self.menu_home = Frame(self.space,width=300,height=200,bd=0,highlightthickness=0)
         self.create_widgets()
 
@@ -475,6 +301,8 @@ class MyApp:
         self.menu_home_bg_label =  Label(self.menu_home, image=self.menu_home_bg,bd=0,highlightthickness=0)
         self.menu_home_bg_label.place(x=0, y=0, relwidth=1, relheight=1)
         self.menu_home_bg_label.lower()   #### Pour qu'il deceande du premier plan 
+
+        
 
         self.menu_home.pack_forget()
 
@@ -493,10 +321,10 @@ class MyApp:
         self.button_wifi = Button(self.menu_home,image=self.image_update,command=self.open_wifi)
         self.button_wifi.grid(padx=10,pady=10,row=0,column=5)
 
-    def open_update(self):
-        ch = os.system("pwd")
-        cmd=f'sudo screen -d -m {ch}/network.sh'
-        os.system(cmd)
+    #def open_update(self):
+        #ch = os.system("pwd")
+        #cmd=f'sudo screen -d -m {self.file}network.sh'
+        #os.system(cmd)
 
     ## WIFI
     def Active_WIFI(self):
@@ -506,8 +334,7 @@ class MyApp:
         self.button_wifi.grid(padx=10,pady=10,row=0,column=5)
 
     def open_wifi(self):
-        ch = os.system("pwd")
-        cmd=f'sudo screen -d -m {ch}/network.sh'
+        cmd=f'sudo screen -d -m {self.file}network.sh'
         os.system(cmd)
 
     #Bluetooth
@@ -518,8 +345,7 @@ class MyApp:
         self.button_Bluetooth.grid(padx=10,pady=10,row=0,column=6)
 
     def open_Bluetooth(self):
-        ch = os.system("pwd")
-        cmd=f'sudo screen -d -m {ch}/bluetooth.sh'
+        cmd=f'sudo screen -d -m {self.file}bluetooth.sh'
         os.system(cmd)
 
     # NETFLIX
@@ -594,13 +420,18 @@ class MyApp:
 
     def create_ssh_button(self):
         ### Menu ssh
-        self.image_ssh = PhotoImage(file=f"{self.file}Images/Home/netflix.png").zoom(1) #.subsample(32)
+        self.image_ssh = PhotoImage(file=f"{self.file}Images/Home/ssh.png").zoom(1) #.subsample(32)
         self.image_ssh = self.image_ssh.subsample(7)
         self.button_ssh = Button(self.menu_home,image=self.image_ssh,bg='#888989',command=self.open_ssh())
         self.button_ssh.grid(padx=10,pady=10,row=0,column=2)
 
     def open_ssh(self):
-        cmd='sudo /etc/init.d/ssh start'
+        if self.ssh == True:
+            cmd='sudo /etc/init.d/ssh stop'
+            self.ssh = False
+        else:
+            cmd="sudo /etc/init.d/ssh start"
+            self.ssh = True
         os.system(cmd)
 
     def create_title(self):
@@ -617,22 +448,22 @@ class MyApp:
     #########################################################################
     #                         Changer DATA FILE                             #
     #########################################################################
-    def data_change(self,after,new):
-        fin = open(f"{self.file}data.txt", "rt")
-        data = fin.read()
-        data = data.replace(f'{after}', f'{new}')
-        fin.close()
-        fin = open(f"{self.file}data.txt", "wt")
-        fin.write(data)
-        fin.close()
+    # def data_change(self,after,new):
+    #     fin = open(f"{self.file}data.txt", "rt")
+    #     data = fin.read()
+    #     data = data.replace(f'{after}', f'{new}')
+    #     fin.close()
+    #     fin = open(f"{self.file}data.txt", "wt")
+    #     fin.write(data)
+    #     fin.close()
 
-    def get_data(self,key):
-        with open(f'{self.file}data.txt') as f:
-            lines = f.readlines()
-            for line in lines:
-                if key in line:
-                    return line.replace(key,"").replace("\n","")
-                    break
+    #def get_data(self,key):
+    #    with open(f'{self.file}data.txt') as f:
+    #        lines = f.readlines()
+    #        for line in lines:
+    #            if key in line:
+    #                return line.replace(key,"").replace("\n","")
+    #                break
 
 class MyVideoCapture:
 
@@ -692,14 +523,16 @@ class MyThread(Thread):
         super(MyThread, self).__init__(**kwargs)
         #print(subprocess.check_output("sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0", shell=True))
         test = str(subprocess.check_output("echo cc$(sudo ip a | grep can0)", shell=True)).strip().replace("\\n'","").replace("b'","")
-        print(test)
         if len(test) > 2:
             print("oui")
+            print(subprocess.check_output("sudo modprobe can_raw && sudo modprobe can_dev && sudo ip link set can0 up type can bitrate 125000 sample-point 0.875", shell=True))
         else:
             print("non") ## CREATE VIRTUAL CAN
-            subprocess.check_output("sudo ip link add dev can0 type vcan",shell=True)
-        print(subprocess.check_output("sudo modprobe can_raw && sudo modprobe can_dev && sudo insmod /home/pi/Desktop/voiture_207_clim_rpi3/usb2can/usb_8dev.ko && sudo ip link set can0 up type can bitrate 125000 sample-point 0.875", shell=True))
+            #subprocess.check_output("sudo ip link add dev can0 type vcan",shell=True)#&& sudo insmod /home/pi/Desktop/voiture_207_clim_rpi3/usb2can/usb_8dev.ko
+            print(str(subprocess.check_output("sudo modprobe vcan && sudo ip link add dev can0 type vcan && sudo ip link set up can0 && ip a", shell=True)))
+        
         self.bus = can.Bus(interface='socketcan',channel='can0',receive_own_messages=False)
+        print("bus can OK")
         self.argument = argument
         self.manuel_auto_pareprise_fan = 0xA2
         self.speed_fan = 0x0F
@@ -713,6 +546,7 @@ class MyThread(Thread):
         self.manuel_auto_pareprise_fan_data_send_1_fois_max_truc_avant=0
         self.btn_bue_status = 4
         self.btn_change_position_Manuel_auto_ac_status = 1
+        print("can var OK")
 
         
     def get_speed(self):
@@ -936,7 +770,7 @@ class MyThread(Thread):
             if self.manuel_auto_pareprise_fan == 0x11:
                 self.position_fan=0x10
                 self.recycle_air_fan=0x10
-
+            
             message = can.Message(arbitration_id=0x1D0, is_extended_id=False,data=[
                 self.manuel_auto_pareprise_fan, 
                 00, 
@@ -945,12 +779,14 @@ class MyThread(Thread):
                 self.recycle_air_fan,
                 self.temp_fan_LEFT,
                 self.temp_fan_RIGHT])
+            #print("Can Message OK")
             self.bus.send(message)
+            #print("Can send OK")
 
-            sleep(0.2)
+            sleep(0.02)
 
 
-
+print("Afficher")
 # afficher
 app = MyApp()
 app.window.mainloop()
