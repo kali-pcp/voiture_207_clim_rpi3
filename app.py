@@ -34,6 +34,7 @@ class MyApp:
         self.get_recyclage_air = self.fan.get_recyclage_air()
         self.btn_bue_status = self.fan.btn_bue_status
         self.get_position_fan = self.fan.get_position_fan()
+        self.get_speed = self.fan.get_speed()
 
         self.window = Tk()
         #Included directly after imports at top of program
@@ -218,7 +219,8 @@ class MyApp:
         ## UPDATE MANUEL | AUTO | OFF | AUTO AC
         manuel_auto_fan = self.fan.manuel_auto_pareprise_fan ### UPDATE IMAGE MANUEL
         #if manuel_auto_fan != 0xA2:
-        if self.fan.manuel_auto_pareprise_fan != manuel_auto_fan:
+        #print(self.manuel_auto_pareprise_fan," != ",manuel_auto_fan)
+        if (self.manuel_auto_pareprise_fan != manuel_auto_fan) or (self.get_speed != self.fan.get_speed()):
             self.manuel_auto_pareprise_fan = self.fan.manuel_auto_pareprise_fan ## UPDATE VAR SPEED
             self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{manuel_auto_fan}.png').zoom(1) 
             self.image_auto = self.image_auto.subsample(3, 3)
@@ -226,6 +228,7 @@ class MyApp:
             ## CACHER SPEED
             if manuel_auto_fan == 0x22 or manuel_auto_fan == 0x11 or manuel_auto_fan == 0x62 or manuel_auto_fan == 0x21:
                 if self.fan.get_speed() != 15:
+                    self.get_speed = self.fan.get_speed() 
                     self.slider_speed_fan_label.grid(stick=N,row=2,column=1)
                     self.slider_speed_fan_label.configure(text=self.fan.get_speed())
             else:
@@ -308,8 +311,9 @@ class MyApp:
 
     def create_widgets(self):
         self.create_title()
+        #self.create_recule_button()
         self.create_netflix_button()
-        self.set_light()
+        #self.set_light()
         self.create_ssh_button()
         self.Active_WIFI()
         self.Active_Bluetooth()
@@ -351,8 +355,8 @@ class MyApp:
     # NETFLIX
     def create_netflix_button(self):
         ### Menu Netflix
-        self.image_netflix = PhotoImage(file=f"{self.file}Images/Home/netflix.png").zoom(1) #.subsample(32)
-        self.image_netflix = self.image_netflix.subsample(7)
+        self.image_netflix = PhotoImage(file=f"{self.file}Images/Home/amazone_fire_tv_stick.png").zoom(1) #.subsample(32)
+        self.image_netflix = self.image_netflix.subsample(3)
         self.button_netflix = Button(self.menu_home,image=self.image_netflix,bg='#888989',command=self.open_netflix)
         #self.button_netflix.pack(padx=10,anchor=NW)
         self.button_netflix.grid(padx=10,pady=10,row=0,column=0)
@@ -383,6 +387,28 @@ class MyApp:
         self.update()
         #webbrowser.open_new("https://www.netflix.com/browse")
 
+    def create_recule_button(self):
+        ### Menu Recule cam arriere
+        self.image_netflix = PhotoImage(file=f"{self.file}Images/Home/recule.png").zoom(1) #.subsample(32)
+        self.image_netflix = self.image_netflix.subsample(3)
+        self.button_netflix = Button(self.menu_home,image=self.image_netflix,bg='#888989',command=self.open_cam_recule)
+        self.button_netflix.grid(padx=10,pady=10,row=0,column=4)
+
+    def open_cam_recule(self):
+        self.video_source = 1
+        #self.video_source = self.cam
+        #self.cam = self.cam+1
+        if self.cam_arrire :
+            self.vid.__del__()
+            self.canvas.destroy()
+        else:
+            self.vid = MyVideoCapture(self.video_source)
+            self.canvas = Canvas(self.menu_home, width = self.vid.width, height = self.vid.height)
+            self.canvas.place(x=0, y=0) #,relwidth=1, relheight=1
+        self.cam_arrire = not self.cam_arrire
+        self.delay = 15
+        self.update()
+
     def returnCameraIndexes(self):
         # checks the first 10 indexes.
         index = 0
@@ -406,17 +432,17 @@ class MyApp:
                 self.canvas.create_image((self.vid.width/2), (self.vid.height/2), image = self.photo)
             self.window.after(self.delay, self.update)
 
-    def set_light(self):
-        # changer la luminosité 
-        self.slider_luminositer = Scale(
-        self.menu_home,from_=0,to=100,orient='horizontal',command=self.slider_set_light,width=70,
-        troughcolor='#343b48',highlightcolor="#55aaff",showvalue=0,bd=0,bg="#4d4d7f")
-        #self.slider_luminositer.pack(padx=0, pady=0,anchor=NW)
-        self.slider_luminositer.grid(padx=10,pady=10,row=0,column=1)
+    # def set_light(self):
+    #     # changer la luminosité 
+    #     self.slider_luminositer = Scale(
+    #     self.menu_home,from_=0,to=100,orient='horizontal',command=self.slider_set_light,width=70,
+    #     troughcolor='#343b48',highlightcolor="#55aaff",showvalue=0,bd=0,bg="#4d4d7f")
+    #     #self.slider_luminositer.pack(padx=0, pady=0,anchor=NW)
+    #     self.slider_luminositer.grid(padx=10,pady=10,row=0,column=1)
 
-    def slider_set_light(self,var):
-        cmd=f"sudo brightnessctl -d intel_backlight -c backlight s {var}%"
-        os.system(cmd)
+    # def slider_set_light(self,var):
+    #     cmd=f"sudo brightnessctl -d intel_backlight -c backlight s {var}%"
+    #     os.system(cmd)
 
     def create_ssh_button(self):
         ### Menu ssh
