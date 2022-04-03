@@ -1,8 +1,14 @@
+from calendar import c
+#from ctypes import windll
+from curses import window
 from curses.ascii import CAN
 from distutils import command
 from tkinter import *
 
 #Included with imports at top of program
+import tkinter
+from ctypes import *
+from tkinter.tix import IMAGE
 import sys
 import webbrowser
 import os
@@ -17,6 +23,7 @@ class MyApp:
         #self.file="/home/tony/Documents/USB2CAN/Application_Voiture/voiture_207_clim_rpi3/"
         #self.file="/home/pi/Desktop/voiture_207_clim_rpi3/"
         #self.file=str(os.getcwd())+"/"
+
         dirname, filename = os.path.split(os.path.abspath(__file__))
         print("running from", dirname)
         print("file is", filename)
@@ -36,6 +43,8 @@ class MyApp:
         self.get_position_fan = self.fan.get_position_fan()
         self.get_speed = self.fan.get_speed()
 
+        os.system("sudo hciconfig hci1 down") ## Pour désactivé l'interface bluetooth interne 
+
         self.window = Tk()
         #Included directly after imports at top of program
         self.window.overrideredirect(True)
@@ -46,8 +55,16 @@ class MyApp:
         self.window.geometry("1080x720")
         #self.window.minsize(480,360)
 
+        print(self.window.winfo_screenwidth())
+        print(self.window.winfo_screenheight())
+        self.hight_bar_fan = 20 ### BAR FAN HAUTEUR
+        self.size_netflix_height = (self.window.winfo_screenheight()-self.hight_bar_fan) 
+        self.size_netflix_width = self.window.winfo_screenwidth()
+        self.center_item_fan = (self.window.winfo_screenwidth()/7)/2
+        
+
         #Disable the Mouse Pointer
-        self.window.config(cursor="none")
+        #self.window.config(cursor="none")
 
         self.fullscreen = Frame(self.window, bg="#888989")
         self.fullscreen.pack_propagate(0)
@@ -62,6 +79,12 @@ class MyApp:
         self.bg = PhotoImage(file=f'{self.file}peugeot3.png')
         self.bg_label =  Label(self.space, image=self.bg,bd=0,highlightthickness=0)
         self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+
+        ## COULEUR TRANSPARENT
+        #self.couleur_transparente = "grey"
+        #self.window.wait_visibility(self.window)
+        #self.window.wm_attributes('-transparentcolor','grey')
+        #self.window.wm_attributes("-alpha", 0.0)
     
 
         #### Variable
@@ -74,15 +97,18 @@ class MyApp:
             self.bue_avant_status=True
         
         print("--- MENU ----")
-        self.menu = Frame(self.fullscreen,width=110, height=580, bg='#888989',bd=1)
-        self.menu.pack_propagate(0)
-        self.menu.pack(side=LEFT, expand=False)
-        self.create_MenuBar()
-        self.init_Menu_Home()
+        #self.menu = Frame(self.fullscreen,width=110, height=580, bg='#888989',bd=1)
+        #self.menu.pack_propagate(0)
+        #self.menu.pack(side=LEFT, expand=False)
+        #self.create_MenuBar()
+        #self.init_Menu_Home()
         self.init_Menu_Fan()
+        self.init_firetv()
         self.clear_widgets()
         #self.show_Menu_Home()
         print("-- SHOW MENU FAN --")
+        #self.open_netflix()
+        self.show_firetv()
         self.show_Menu_Fan()
 
     def clear_widgets(self):
@@ -131,85 +157,163 @@ class MyApp:
     def show_Menu_Fan(self):
         self.clear_widgets()
         #self.menu_fan.grid(fill='both')
-        self.menu_fan.pack(fill='both',expand=YES)#,side=BOTTOM
+        #self.menu_fan.pack(fill='both',expand=YES)#,side=BOTTOM
+        self.menu_fan.pack(side=BOTTOM,fill="x",anchor=S)#expand=NO,
     
-    def init_Menu_Fan(self):
-        background_color = '#c6c6dd' #4d4d7f
-        self.menu_fan = Frame(self.space,width=700,height=500,bg=background_color,bd=0,highlightthickness=0)
-
-
-        self.label_espace = Label(self.menu_fan,text="",bg=background_color,bd=0,highlightthickness=0)
-        self.label_espace.grid(ipady=70,row=1,column=0)
-        self.label_espace_droite = Label(self.menu_fan,text="",bg=background_color,bd=0,highlightthickness=0)
-        self.label_espace_droite.grid(ipady=70,row=1,column=3)
-
-
-        #### BOUTTON TEMPERATURE
-        ### Slider Gauche OK
-        self.slider_Chaud_gauche = Scale(
-        self.menu_fan,from_=0,to=23,orient='horizontal',command=self.slider_changed_chaud_Gauche,width=70,
-        troughcolor='#343b48',highlightcolor="#55aaff",showvalue=0,bd=0,bg="#4d4d7f")
-        self.slider_Chaud_gauche.grid(pady=0,row=3,column=0)
-        self.slider_Chaud_gauche['state'] = 'normal'
-        value_slider_gauche_data = self.fan.temp_fan_RIGHT
-        self.slider_Chaud_gauche.set(value_slider_gauche_data)
-        self.slider_Chaud_gauche_label = Label(self.menu_fan,bg="#4d4d7f",fg="#e77100",font=("Courrier", 30),text=self.fan.convert_Temp_fan_slide_to_tmp(value_slider_gauche_data))
-        self.slider_Chaud_gauche_label.grid(pady=30,stick=S,row=2,column=0)
-
-        ### Slider Droit OK
-        self.slider_Chaud_droit = Scale(
-        self.menu_fan,from_=0,to=23,orient='horizontal',command=self.slider_changed_chaud_droit,width=70,
-        troughcolor='#343b48',highlightcolor="#55aaff",showvalue=0,bd=0,bg="#4d4d7f")
-        self.slider_Chaud_droit.grid(pady=0,row=3,column=2)
-        self.slider_Chaud_droit['state'] = 'normal'
-        value_slider_droit_data = self.fan.temp_fan_LEFT
-        self.slider_Chaud_droit.set(value_slider_droit_data)
-        self.slider_Chaud_droit_label = Label(self.menu_fan,bg="#4d4d7f",fg="#e77100",font=("Courrier", 30),text=self.fan.convert_Temp_fan_slide_to_tmp(value_slider_droit_data))
-        self.slider_Chaud_droit_label.grid(pady=30,stick=S,row=2,column=2)
-
-        ### Recyclage D'air OK
-        self.image_recycle_aire = PhotoImage(file=f'{self.file}Images/Fan/Recycle_{self.fan.get_recyclage_air()}.png').zoom(1) #.subsample(32)
-        self.image_recycle_aire = self.image_recycle_aire.subsample(6, 6)
-        self.button_image_recycle_aire = Button(self.menu_fan,image=self.image_recycle_aire,bg=background_color, fg='#4d4d7f',
-        activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.recyclage_air, self.Update_Menu_Fan))
-        self.button_image_recycle_aire.grid(row=3,column=1)
+    def init_Menu_Fan(self): ## BAR EN BAS
+        background_color = '#212121' #'#c6c6dd' #4d4d7f
+        background_active = '#212121'#'4d4d7f'
+        self.menu_fan = Frame(self.space,width=700,height=self.hight_bar_fan,bg=background_color,bd=0,highlightthickness=0)
 
 
 
-        ### Boutton Ventilo OK
-        self.image_speed_fan_up = PhotoImage(file=f'{self.file}Images/Fan/Speed.png').zoom(1) #.subsample(32)
-        self.image_speed_fan_up = self.image_speed_fan_up.subsample(6, 6)
-        self.button_image_speed_fan_up = Button(self.menu_fan,image=self.image_speed_fan_up,bg=background_color, fg='#4d4d7f',
-        activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.set_speed_up , self.Update_Menu_Fan))
-        #self.button_image_speed_fan_up.grid(ipady=50,stick=N,row=1,column=1)
-
-        self.image_speed_fan_down = PhotoImage(file=f'{self.file}Images/Fan/Speed.png').zoom(1) #.subsample(32)
-        self.image_speed_fan_down = self.image_speed_fan_down.subsample(8, 8)
-        self.button_image_speed_fan_down = Button(self.menu_fan,image=self.image_speed_fan_down,bg=background_color, fg='#4d4d7f',
-        activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.set_speed_down , self.Update_Menu_Fan))
-        #self.button_image_speed_fan_down.grid(ipady=0,stick=S,row=1,column=1)
-
-        self.slider_speed_fan_label = Label(self.menu_fan,bg="#4d4d7f",fg="#e77100",font=("Courrier", 30),
-        text=self.fan.get_speed)
-        #self.slider_speed_fan_label.grid(stick=N,row=2,column=1)
+        # self.label_espace = Label(self.menu_fan,text="",bg=background_color,bd=0,highlightthickness=0)
+        # self.label_espace.grid(ipady=70,row=1,column=0)
+        # self.label_espace_droite = Label(self.menu_fan,text="",bg=background_color,bd=0,highlightthickness=0)
+        # self.label_espace_droite.grid(ipady=70,row=1,column=3)
 
         ### Bouton HAUT bue_avant 
-        self.image_fan_bue_avant = PhotoImage(file=f'{self.file}Images/Fan/bue_{self.fan.btn_bue_status}.png').zoom(1) #.subsample(32)
-        self.image_fan_bue_avant = self.image_fan_bue_avant.subsample(3, 3)
-        self.button_image_fan_bue_avant = Button(self.menu_fan,image=self.image_fan_bue_avant,bg=background_color, fg='#4d4d7f',
-        activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.bue_one_click , self.Update_Menu_Fan))
+        self.image_fan_bue_avant = PhotoImage(file=f'{self.file}Images/Fan/BUE/{self.fan.btn_bue_avant_status}.png').zoom(1) #.subsample(32)
+        self.image_fan_bue_avant = self.image_fan_bue_avant.subsample(6, 6)
+        self.button_image_fan_bue_avant = Button(self.menu_fan,image=self.image_fan_bue_avant,bg=background_color , fg=background_active,
+        activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.bue_avant , self.Update_Menu_Fan))
         #self.button_image_fan_bue_avant.pack(padx=15,pady=50,anchor=CENTER)
-        self.button_image_fan_bue_avant.grid(row=0,column=0)
+        self.button_image_fan_bue_avant.grid(ipadx=(self.center_item_fan/4),row=0,column=0)
 
-        self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{self.fan.manuel_auto_pareprise_fan}.png').zoom(1) #.subsample(32)
-        self.image_auto = self.image_auto.subsample(3, 3)
-        self.button_image_auto = Button(self.menu_fan,image=self.image_auto,bg=background_color, fg='#4d4d7f',activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.change_position_Manuel_auto_ac , self.Update_Menu_Fan))
-        self.button_image_auto.grid(row=0,column=1)
+        ## STATUS CLIM
+        #self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/Status/manuel_auto_{self.fan.manuel_auto_pareprise_fan}.png').zoom(1) #.subsample(32)
+        #self.image_auto = self.image_auto.subsample(3, 3)
+        #self.button_image_auto = Button(self.menu_fan,image=self.image_auto,bg=background_color, fg='#4d4d7f',activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.change_position_Manuel_auto_ac , self.Update_Menu_Fan))
+        #self.button_image_auto.grid(row=0,column=1)
 
-        self.image_fan_s_c = PhotoImage(file=f'{self.file}Images/Fan/position_{self.fan.get_position_fan()}.png').zoom(1) #.subsample(32)
-        self.image_fan_s_c = self.image_fan_s_c.subsample(3, 3)
-        self.button_image_fan_s_c = Button(self.menu_fan,image=self.image_fan_s_c,bg=background_color, fg='#4d4d7f',activebackground="#4d4d7f",borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.change_position_fan , self.Update_Menu_Fan))
-        self.button_image_fan_s_c.grid(row=0,column=2)
+
+        ### BOUTTON TEMPERATURE
+        ## Slider Gauche OK
+        # self.slider_Chaud_gauche = Scale(
+        # self.menu_fan,from_=0,to=23,orient='horizontal',command=self.slider_changed_chaud_Gauche,width=50,
+        # troughcolor='#343b48',highlightcolor="#55aaff",showvalue=0,bd=0,bg="#4d4d7f")
+        # self.slider_Chaud_gauche.grid(pady=0,row=0,column=2)
+        # self.slider_Chaud_gauche['state'] = 'normal'
+        # value_slider_gauche_data = self.fan.temp_fan_RIGHT
+        # self.slider_Chaud_gauche.set(value_slider_gauche_data)
+        # self.slider_Chaud_gauche_label = Label(self.menu_fan,bg="#4d4d7f",fg="#e77100",font=("Courrier", 30),text=self.fan.convert_Temp_fan_slide_to_tmp(value_slider_gauche_data))
+        # self.slider_Chaud_gauche_label.grid(pady=0,stick=S,row=0,column=2)
+
+        self.image_temperature_gauche_up = PhotoImage(file=f'{self.file}Images/Fan/temperature/up.png').zoom(1) #.subsample(32)
+        self.image_temperature_gauche_up = self.image_temperature_gauche_up.subsample(7, 7)
+        self.button_temperature_gauche_up= Button(self.menu_fan,image=self.image_temperature_gauche_up,bg=background_color, fg=background_active,
+        activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.temperature_left_up , self.Update_Menu_Fan))
+        self.button_temperature_gauche_up.grid(ipadx=self.center_item_fan,ipady=0,stick=N,row=0,column=1)
+
+        #value_slider_gauche_data = self.fan.temp_fan_RIGHT
+        self.slider_Chaud_gauche_label = Label(self.menu_fan,bg=background_color ,fg="#e77100",font=("Courrier", 25),text="21")
+        self.slider_Chaud_gauche_label.grid(ipady=0,row=0,column=1)
+
+        self.image_temperature_gauche_down = PhotoImage(file=f'{self.file}Images/Fan/temperature/down.png').zoom(1) #.subsample(32)
+        self.image_temperature_gauche_down = self.image_temperature_gauche_down.subsample(8, 8)
+        self.button_temperature_gauche_down= Button(self.menu_fan,image=self.image_temperature_gauche_down,bg=background_color, fg=background_active,
+        activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.temperature_left_down , self.Update_Menu_Fan))
+        self.button_temperature_gauche_down.grid(ipadx=self.center_item_fan,ipady=0,stick=S,row=0,column=1)
+
+        ### Recyclage D'air OK
+        self.image_recycle_aire = PhotoImage(file=f'{self.file}Images/Fan/RECYCLE_AIR/Recycle_{self.fan.get_recyclage_air()}.png').zoom(1) #.subsample(32)
+        self.image_recycle_aire = self.image_recycle_aire.subsample(7, 7)
+        self.button_image_recycle_aire = Button(self.menu_fan,image=self.image_recycle_aire,bg=background_color, fg=background_active,
+        activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.recyclage_air, self.Update_Menu_Fan))
+        self.button_image_recycle_aire.grid(ipadx=self.center_item_fan,row=0,column=2)
+
+
+
+
+
+
+
+        ### POWER
+        self.power_label = Label(self.menu_fan,bg=background_color, fg="#e77100",font=("Courrier", 15),text="OFF")
+        self.power_label.grid(pady=0,row=0,column=3)
+
+        self.image_power = PhotoImage(file=f'{self.file}Images/Fan/Status/power.png').zoom(1) #.subsample(32)
+        self.image_power = self.image_power.subsample(13, 13)
+        self.button_image_power = Button(self.menu_fan,image=self.image_power,bg=background_color, fg=background_active,
+        activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.change_position_Manuel_auto_ac, self.Update_Menu_Fan))
+        self.button_image_power.grid(stick=S,ipadx=15,row=0,column=3)
+
+                ####                            SPEED ### STATUS
+        self.image_fan_speed_status = PhotoImage(file=f'{self.file}Images/Fan/Fan/AIR_SPEED_{self.fan.get_speed()}.png').zoom(1) #.subsample(32)
+        self.image_fan_speed_status = self.image_fan_speed_status.subsample(13, 13)
+        self.fan_speed_status_label = Label(self.menu_fan, image=self.image_fan_speed_status,bg=background_color)
+        self.fan_speed_status_label.grid(stick=N,pady=0,ipadx=15,row=0,column=3)
+
+        ### Boutton Ventilo OK              SPEED ######### MINUS
+        self.image_speed_fan_down = PhotoImage(file=f'{self.file}Images/Fan/arrow/left.png').zoom(1) #.subsample(32)
+        self.image_speed_fan_down = self.image_speed_fan_down.subsample(16, 16)
+        self.button_image_speed_fan_down = Button(self.menu_fan,image=self.image_speed_fan_down,bg=background_color, fg=background_active,
+        activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.set_speed_down , self.Update_Menu_Fan))
+        self.button_image_speed_fan_down.grid(stick=NW,ipady=0,row=0,column=3)
+        ### Boutton Ventilo OK              SPEED ######### PLUS
+        self.image_speed_fan_up = PhotoImage(file=f'{self.file}Images/Fan/arrow/right.png').zoom(1) #.subsample(32)
+        self.image_speed_fan_up = self.image_speed_fan_up.subsample(15, 15)
+        self.button_image_speed_fan_up = Button(self.menu_fan,image=self.image_speed_fan_up,bg=background_color, fg=background_active,
+        activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.set_speed_up , self.Update_Menu_Fan))
+        self.button_image_speed_fan_up.grid(stick=NE,ipady=0,row=0,column=3)
+
+
+
+
+
+
+
+        ### BOUTON POSITION
+        self.image_fan_s_c = PhotoImage(file=f'{self.file}Images/Fan/POSITION/position_{self.fan.get_position_fan()}.png').zoom(1) #.subsample(32)
+        self.image_fan_s_c = self.image_fan_s_c.subsample(5, 5)
+        self.button_image_fan_s_c = Button(self.menu_fan,image=self.image_fan_s_c,bg=background_color, fg=background_active,activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.change_position_fan , self.Update_Menu_Fan))
+        self.button_image_fan_s_c.grid(ipadx=self.center_item_fan,row=0,column=4)
+
+        ### Slider Droit OK
+        # self.slider_Chaud_droit = Scale(
+        # self.menu_fan,from_=0,to=23,orient='horizontal',command=self.slider_changed_chaud_droit,width=50,
+        # troughcolor='#343b48',highlightcolor="#55aaff",showvalue=0,bd=0,bg="#4d4d7f")
+        # self.slider_Chaud_droit.grid(pady=0,row=0,column=6)
+        # self.slider_Chaud_droit['state'] = 'normal'
+        # value_slider_droit_data = self.fan.temp_fan_LEFT
+        # self.slider_Chaud_droit.set(value_slider_droit_data)
+        # self.slider_Chaud_droit_label = Label(self.menu_fan,bg="#4d4d7f",fg="#e77100",font=("Courrier", 30),text=self.fan.convert_Temp_fan_slide_to_tmp(value_slider_droit_data))
+        # self.slider_Chaud_droit_label.grid(pady=0,stick=S,row=0,column=5)
+
+
+        self.image_temperature_droit_up = PhotoImage(file=f'{self.file}Images/Fan/temperature/up.png').zoom(1) #.subsample(32)
+        self.image_temperature_droit_up = self.image_temperature_droit_up.subsample(8, 8)
+        self.button_temperature_droit_up= Button(self.menu_fan,image=self.image_temperature_droit_up,bg=background_color, fg=background_active,
+        activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.temperature_right_up, self.Update_Menu_Fan))
+        self.button_temperature_droit_up.grid(ipadx=self.center_item_fan,ipady=0,stick=N,row=0,column=5)
+
+        #value_slider_gauche_data = self.fan.temp_fan_RIGHT
+        self.slider_Chaud_droit_label = Label(self.menu_fan,bg=background_color,fg="#e77100",font=("Courrier", 25),text="21")
+        self.slider_Chaud_droit_label.grid(ipady=0,row=0,column=5)
+
+        self.image_temperature_droit_down = PhotoImage(file=f'{self.file}Images/Fan/temperature/down.png').zoom(1) #.subsample(32)
+        self.image_temperature_droit_down = self.image_temperature_droit_down.subsample(8, 8)
+        self.button_temperature_droit_down= Button(self.menu_fan,image=self.image_temperature_droit_down,bg=background_color, fg=background_active,
+        activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.temperature_right_down, self.Update_Menu_Fan))
+        self.button_temperature_droit_down.grid(ipadx=self.center_item_fan,ipady=0,stick=S,row=0,column=5)
+
+        #self.slider_speed_fan_label = Label(self.menu_fan,bg="#4d4d7f",fg="#e77100",font=("Courrier", 30),
+        #text=self.fan.get_speed)
+        #self.slider_speed_fan_label.grid(stick=N,row=2,column=1)
+
+
+
+        ### Bouton HAUT bue_arriere
+        self.image_fan_bue_arriere = PhotoImage(file=f'{self.file}Images/Fan/BUE/{self.fan.btn_bue_arriere_status}.png').zoom(1) #.subsample(32)
+        self.image_fan_bue_arriere = self.image_fan_bue_arriere.subsample(6, 6)
+        self.button_image_fan_bue_arriere = Button(self.menu_fan,image=self.image_fan_bue_arriere,bg=background_color, fg=background_active,
+        activebackground=background_active,borderwidth=0,bd=0,highlightthickness=0,command=self.combineFunc(self.fan.bue_arriere , self.Update_Menu_Fan))
+        #self.button_image_fan_bue_avant.pack(padx=15,pady=50,anchor=CENTER)
+        self.button_image_fan_bue_arriere.grid(ipadx=self.center_item_fan,row=0,column=6)
+
+
+
+
 
         self.menu_fan.pack_forget()
 
@@ -220,42 +324,69 @@ class MyApp:
         manuel_auto_fan = self.fan.manuel_auto_pareprise_fan ### UPDATE IMAGE MANUEL
         #if manuel_auto_fan != 0xA2:
         #print(self.manuel_auto_pareprise_fan," != ",manuel_auto_fan)
+
         if (self.manuel_auto_pareprise_fan != manuel_auto_fan) or (self.get_speed != self.fan.get_speed()):
             self.manuel_auto_pareprise_fan = self.fan.manuel_auto_pareprise_fan ## UPDATE VAR SPEED
-            self.image_auto = PhotoImage(file=f'{self.file}Images/Fan/manuel_auto_{manuel_auto_fan}.png').zoom(1) 
-            self.image_auto = self.image_auto.subsample(3, 3)
-            self.button_image_auto.configure(image=self.image_auto)
-            ## CACHER SPEED
-            if manuel_auto_fan == 0x22 or manuel_auto_fan == 0x11 or manuel_auto_fan == 0x62 or manuel_auto_fan == 0x21:
-                if self.fan.get_speed() != 15:
-                    self.get_speed = self.fan.get_speed() 
-                    self.slider_speed_fan_label.grid(stick=N,row=2,column=1)
-                    self.slider_speed_fan_label.configure(text=self.fan.get_speed())
+            if self.manuel_auto_pareprise_fan == 0x22 or self.manuel_auto_pareprise_fan == 0x11 or self.manuel_auto_pareprise_fan == 0x21 or self.manuel_auto_pareprise_fan == 0x62:
+                self.power_label.configure(text="Manuel")
+            elif self.manuel_auto_pareprise_fan == 0x20:
+                self.power_label.configure(text="Auto")
+            elif self.manuel_auto_pareprise_fan == 0x00:
+                self.power_label.configure(text="Auto A/C")
             else:
-                self.button_image_speed_fan_up.grid_forget()
-                self.button_image_speed_fan_down.grid_forget()
-                self.slider_speed_fan_label.grid_forget()
+                self.power_label.configure(text="OFF")
+            # CACHER SPEED
+            # if manuel_auto_fan == 0x22 or manuel_auto_fan == 0x11 or manuel_auto_fan == 0x62 or manuel_auto_fan == 0x21:
+            #     if self.fan.get_speed() != 15:
+            #         self.get_speed = self.fan.get_speed() 
+            #         self.slider_speed_fan_label.grid(stick=N,row=2,column=1)
+            #         self.slider_speed_fan_label.configure(text=self.fan.get_speed())
+            # else:
+            #     self.button_image_speed_fan_up.grid_forget()
+            #     self.button_image_speed_fan_down.grid_forget()
+            #     self.slider_speed_fan_label.grid_forget()
+
+        ###### BUE AVANT
+        if self.bue_avant_status != self.fan.bue_avant_status:
+            self.bue_avant_status = self.fan.bue_avant_status
+            self.image_fan_bue_avant = PhotoImage(file=f'{self.file}Images/Fan/BUE/{self.fan.btn_bue_avant_status}.png').zoom(1)
+            self.image_fan_bue_avant = self.image_fan_bue_avant.subsample(6, 6)
+            self.button_image_fan_bue_avant.configure(image=self.image_fan_bue_avant)
+
 
         ## UPDATE AIR RECYCLE
         if self.get_recyclage_air != self.fan.get_recyclage_air():
             self.get_recyclage_air = self.fan.get_recyclage_air()
-            self.image_recycle_aire = PhotoImage(file=f'{self.file}Images/Fan/Recycle_{self.fan.get_recyclage_air()}.png').zoom(1)
-            self.image_recycle_aire = self.image_recycle_aire.subsample(6, 6)
+            self.image_recycle_aire = PhotoImage(file=f'{self.file}Images/Fan/RECYCLE_AIR/Recycle_{self.fan.get_recyclage_air()}.png').zoom(1)
+            self.image_recycle_aire = self.image_recycle_aire.subsample(7, 7)
             self.button_image_recycle_aire.configure(image=self.image_recycle_aire)
 
-        ## UPDATE Bue 
-        if self.btn_bue_status != self.fan.btn_bue_status : 
-            self.btn_bue_status = self.fan.btn_bue_status
-            self.image_fan_bue_avant = PhotoImage(file=f'{self.file}Images/Fan/bue_{self.fan.btn_bue_status}.png').zoom(1)
-            self.image_fan_bue_avant = self.image_fan_bue_avant.subsample(3, 3)
-            self.button_image_fan_bue_avant.configure(image=self.image_fan_bue_avant)
+        ### STATUS SPEED
+        if self.get_speed != self.fan.get_speed():
+            self.get_speed = self.fan.get_speed()
+            self.image_fan_speed_status = PhotoImage(file=f'{self.file}Images/Fan/Fan/AIR_SPEED_{self.fan.get_speed()}.png').zoom(1) #.subsample(32)
+            self.image_fan_speed_status = self.image_fan_speed_status.subsample(13, 13)
+            self.fan_speed_status_label.configure(image=self.image_fan_speed_status)
+            
 
         ### POSITION FAN
         if self.get_position_fan != self.fan.get_position_fan():
             self.get_position_fan = self.fan.get_position_fan()
-            self.image_fan_s_c = PhotoImage(file=f'{self.file}Images/Fan/position_{self.fan.get_position_fan()}.png').zoom(1) #.subsample(32)
-            self.image_fan_s_c = self.image_fan_s_c.subsample(3, 3)
+            self.image_fan_s_c = PhotoImage(file=f'{self.file}Images/Fan/POSITION/position_{self.fan.get_position_fan()}.png').zoom(1) #.subsample(32)
+            self.image_fan_s_c = self.image_fan_s_c.subsample(5, 5)
             self.button_image_fan_s_c.configure(image=self.image_fan_s_c)
+
+
+        #####  BUE ARRIERE
+        if self.bue_arriere_status != self.fan.bue_arriere_status:
+            self.bue_arriere_status = self.fan.bue_arriere_status
+            self.image_fan_bue_arriere = PhotoImage(file=f'{self.file}Images/Fan/BUE/{self.fan.btn_bue_arriere_status}.png').zoom(1)
+            self.image_fan_bue_arriere = self.image_fan_bue_arriere.subsample(6, 6)
+            self.button_image_fan_bue_arriere.configure(image=self.image_fan_bue_arriere)
+
+        
+
+
 
     def combineFunc(self, *funcs):
         def conbinedFunc(*args,**kwargs):
@@ -266,14 +397,95 @@ class MyApp:
 
     ######################################### TEMPERATURE FAN     ######################################
 
-    def slider_changed_chaud_Gauche(self,var):
-        self.slider_Chaud_gauche_label.configure(text=self.fan.convert_Temp_fan_slide_to_tmp(var))
-        self.fan.temp_fan_LEFT = self.fan.convert_Temp_fan_to_hexa(self.fan.convert_Temp_fan_slide_to_tmp(var))
+    # def slider_changed_chaud_Gauche(self,var):
+    #     self.slider_Chaud_gauche_label.configure(text=self.fan.convert_Temp_fan_slide_to_tmp(var))
+    #     self.fan.temp_fan_LEFT = self.fan.convert_Temp_fan_to_hexa(self.fan.convert_Temp_fan_slide_to_tmp(var))
 
-    def slider_changed_chaud_droit(self,var):
-        self.slider_Chaud_droit_label.configure(text=self.fan.convert_Temp_fan_slide_to_tmp(var))
-        self.fan.temp_fan_RIGHT = self.fan.convert_Temp_fan_to_hexa(self.fan.convert_Temp_fan_slide_to_tmp(var))
+    # def slider_changed_chaud_droit(self,var):
+    #     self.slider_Chaud_droit_label.configure(text=self.fan.convert_Temp_fan_slide_to_tmp(var))
+    #     self.fan.temp_fan_RIGHT = self.fan.convert_Temp_fan_to_hexa(self.fan.convert_Temp_fan_slide_to_tmp(var))
 
+    def temperature_left_up(self):
+        temperature = self.slider_Chaud_gauche_label.cget("text")
+        if temperature != "HI": ## POUR NE PAS ALLEZ PLUS HAUT
+            #print(temperature) ### 21
+            #print(str(self.fan.convert_Temp_fan_to_hexa(temperature))) #0x0B ## 11
+            test = self.fan.convert_Temp_fan_to_hexa(temperature) #0x0B #donne 11
+            test = int(test) + 1
+            #print(str(test)) # 12
+            #print("nouvelle temp = ",self.fan.convert_Temp_fan_slide_to_tmp(str(test)))
+            newtemperature = self.fan.convert_Temp_fan_slide_to_tmp(str(test))
+            self.slider_Chaud_gauche_label.configure(text=newtemperature)
+            #self.slider_Chaud_gauche_label.update()
+            #print("ok")
+            #print(temp)
+            self.fan.temp_fan_LEFT = self.fan.convert_Temp_fan_to_hexa(newtemperature)
+    def temperature_left_down(self):
+        temperature = self.slider_Chaud_gauche_label.cget("text")
+        if temperature != "LO":
+            test = self.fan.convert_Temp_fan_to_hexa(temperature) #0x0B #donne 11
+            test = int(test) - 1
+            newtemperature = self.fan.convert_Temp_fan_slide_to_tmp(str(test))
+            self.slider_Chaud_gauche_label.configure(text=newtemperature)
+            self.fan.temp_fan_LEFT = self.fan.convert_Temp_fan_to_hexa(newtemperature)
+
+    def temperature_right_up(self):
+        temperature = self.slider_Chaud_droit_label.cget("text")
+        if temperature != "HI": ## POUR NE PAS ALLEZ PLUS HAUT
+            test = self.fan.convert_Temp_fan_to_hexa(temperature)
+            test = int(test) + 1
+            newtemperature = self.fan.convert_Temp_fan_slide_to_tmp(str(test))
+            self.slider_Chaud_droit_label.configure(text=newtemperature)
+            #self.slider_Chaud_droit_label.update()
+            self.fan.temp_fan_RIGHT = self.fan.convert_Temp_fan_to_hexa(newtemperature)
+    def temperature_right_down(self):
+        temperature = self.slider_Chaud_droit_label.cget("text")
+        if temperature != "LO":
+            test = self.fan.convert_Temp_fan_to_hexa(temperature) #0x0B #donne 11
+            test = int(test) - 1
+            newtemperature = self.fan.convert_Temp_fan_slide_to_tmp(str(test))
+            self.slider_Chaud_droit_label.configure(text=newtemperature)
+            self.fan.temp_fan_RIGHT = self.fan.convert_Temp_fan_to_hexa(newtemperature)
+
+
+    #########################################################################
+    #                               FIRE TV                                 #
+    #########################################################################
+
+    def show_firetv(self):
+        #self.menu_fan.pack(fill='both',expand=YES)#,side=BOTTOM
+        self.menu_firetv.pack(side=TOP,fill="both",expand=YES)#expand=NO,
+        self.open_firetv()
+
+    def init_firetv(self): ## Tout le Haut
+        background_color = '#4d4d7f' #c6c6dd
+        self.menu_firetv = Frame(self.space,width=700,height=15,bg=background_color,bd=0,highlightthickness=0)
+        self.menu_firetv.pack_forget()
+
+    def open_firetv(self):
+        self.video_source = 0
+        #self.video_source = self.cam
+        #self.cam = self.cam+1
+        if self.cam_arrire :
+            self.vid.__del__()
+            self.canvas.destroy()
+        else:
+            self.vid = MyVideoCapture(self.video_source)
+            #print("width=",self.vid.width)
+            #print("height=",self.vid.height)
+            #self.canvas = Canvas(self.menu_firetv, width = self.vid.width, height = self.vid.height)
+            self.canvas = Canvas(self.menu_firetv, width = self.size_netflix_width, height = self.size_netflix_height)
+            self.canvas.place(x=0, y=0) #,relwidth=1, relheight=1
+        self.cam_arrire = not self.cam_arrire
+
+        # Button that lets the user take a snapshot
+        #self.btn_snapshot=tkinter.Button(window, text="Snapshot", width=50, command=self.snapshot)
+        #self.btn_snapshot.pack(anchor=tkinter.CENTER, expand=True)
+
+        # After it is called once, the update method will be automatically called every delay milliseconds
+        self.delay = 5
+        self.update()
+        #webbrowser.open_new("https://www.netflix.com/browse")
 
     #########################################################################
     #                                Home                                   #
@@ -374,7 +586,8 @@ class MyApp:
             self.canvas.destroy()
         else:
             self.vid = MyVideoCapture(self.video_source)
-            self.canvas = Canvas(self.menu_home, width = self.vid.width, height = self.vid.height)
+            #self.canvas = Canvas(self.menu_home, width = self.vid.width, height = self.vid.height) # avant le size full screen
+            self.canvas = tkinter.Canvas(self.menu_home, width = 100, height = self.size_netflix_height)
             self.canvas.place(x=0, y=0) #,relwidth=1, relheight=1
         self.cam_arrire = not self.cam_arrire
 
@@ -423,14 +636,24 @@ class MyApp:
             i -= 1
         return arr
 
-    def update(self):
+    # def update(self):
+    #     if self.cam_arrire :
+    #         ret, frame = self.vid.get_frame()
+    #         if ret:
+    #             self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
+    #             self.canvas.create_image((self.vid.width/2), (self.vid.height/2), image = self.photo)
+    #         self.window.after(self.delay, self.update)
+
+    def update(self):### POUR LIMAGE EN GRAND 
     # Get a frame from the video source
-        if self.cam_arrire :
-            ret, frame = self.vid.get_frame()
-            if ret:
-                self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
-                self.canvas.create_image((self.vid.width/2), (self.vid.height/2), image = self.photo)
-            self.window.after(self.delay, self.update)
+        ret, frame = self.vid.get_frame()#cv2.resize(self.vid.get_frame(),(1280,720),fx=0,fy=0, interpolation = cv2.INTER_CUBIC)#self.vid.get_frame()
+        
+
+        if ret:
+            self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame).resize((self.size_netflix_width,self.size_netflix_height)))
+            self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
+
+        self.window.after(self.delay, self.update)
 
     # def set_light(self):
     #     # changer la luminosité 
@@ -469,27 +692,9 @@ class MyApp:
     #                                SHUTOWN                                #
     #########################################################################
     def shutdown(self):
-        os.system("poweroff")
-
-    #########################################################################
-    #                         Changer DATA FILE                             #
-    #########################################################################
-    # def data_change(self,after,new):
-    #     fin = open(f"{self.file}data.txt", "rt")
-    #     data = fin.read()
-    #     data = data.replace(f'{after}', f'{new}')
-    #     fin.close()
-    #     fin = open(f"{self.file}data.txt", "wt")
-    #     fin.write(data)
-    #     fin.close()
-
-    #def get_data(self,key):
-    #    with open(f'{self.file}data.txt') as f:
-    #        lines = f.readlines()
-    #        for line in lines:
-    #            if key in line:
-    #                return line.replace(key,"").replace("\n","")
-    #                break
+        #os.system("poweroff")
+        self.window.destroy
+        exit()
 
 class MyVideoCapture:
 
@@ -502,6 +707,7 @@ class MyVideoCapture:
         # Get video source width and height
         self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
         #self.width = self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         #self.height = self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
@@ -572,6 +778,10 @@ class MyThread(Thread):
         self.manuel_auto_pareprise_fan_data_send_1_fois_max_truc_avant=0
         self.btn_bue_status = 4
         self.btn_change_position_Manuel_auto_ac_status = 1
+        self.btn_bue_avant_status = "bue_avant"
+        self.bue_avant_status = False
+        self.btn_bue_arriere_status = "bue_arriere"
+        self.bue_arriere_status = False
         print("can var OK")
 
         
@@ -588,7 +798,7 @@ class MyThread(Thread):
             self.speed_fan = self.speed_fan - 1
 
     def convert_Temp_fan_slide_to_tmp(self,nb): ## nb entre 0 23 to température
-        if nb == "0": ### Erreur de ma part 
+        if nb == "0": ### Erreur de ma part ERREUR TROUVER
             return "LO" 
         elif nb == "1":
             return "14"
@@ -613,28 +823,26 @@ class MyThread(Thread):
         elif nb == "11":
             return "21"
         elif nb == "12":
-            return "21"
-        elif nb == "13":
             return "21.5"
-        elif nb == "14":
+        elif nb == "13":
             return "22"
-        elif nb == "15":
+        elif nb == "14":
             return "22.5"
-        elif nb == "16":
+        elif nb == "15":
             return "23"
-        elif nb == "17":
+        elif nb == "16":
             return "23.5"
-        elif nb == "18":
+        elif nb == "17":
             return "24"
-        elif nb == "19":
+        elif nb == "18":
             return "25"
-        elif nb == "20":
+        elif nb == "19":
             return "26"
-        elif nb == "21":
+        elif nb == "20":
             return "27"
-        elif nb == "22":
+        elif nb == "21":
             return "28"
-        elif nb == "23":
+        elif nb == "22":
             return "HI"
 
     def convert_Temp_fan_to_hexa(self,tmp):## Temp == 20.5 ou LO etc
@@ -727,7 +935,7 @@ class MyThread(Thread):
             self.clim_off()
         elif self.btn_change_position_Manuel_auto_ac_status == 1: ## MANUEL
             self.manuel_auto_pareprise_fan = 0x22
-            self.manuel_fan_control_show()
+            #self.manuel_fan_control_show()
             
         elif self.btn_change_position_Manuel_auto_ac_status == 2: ## AUTO
             self.manuel_auto_pareprise_fan = 0x20
@@ -736,38 +944,64 @@ class MyThread(Thread):
         
         self.btn_change_position_Manuel_auto_ac_status = self.btn_change_position_Manuel_auto_ac_status + 1
 
-    def manuel_fan_control_show(self): ## Pour aficher les FAN
-        self.speed_fan = 0x00
-        app.button_image_speed_fan_up.grid(ipady=50,stick=N,row=1,column=1)
-        app.button_image_speed_fan_down.grid(ipady=0,stick=S,row=1,column=1)
-        app.slider_speed_fan_label.grid(stick=N,row=2,column=1)
-        app.slider_speed_fan_label.configure(text=self.get_speed())
-        self.btn_change_position_Manuel_auto_ac_status = 2 ## POUR QUAND ON CLIC SUR BUE ALORS QU'il ES EN MANUEL 
-        #ES QUE l'on n'a plus la bue et on veux passer en auto on n'appuie pas 2 fois
+    # def manuel_fan_control_show(self): ## Pour aficher les FAN
+    #     self.speed_fan = 0x00
+    #     app.button_image_speed_fan_up.grid(ipady=50,stick=N,row=1,column=1)
+    #     app.button_image_speed_fan_down.grid(ipady=0,stick=S,row=1,column=1)
+    #     app.slider_speed_fan_label.grid(stick=N,row=2,column=1)
+    #     app.slider_speed_fan_label.configure(text=self.get_speed())
+    #     self.btn_change_position_Manuel_auto_ac_status = 2 ## POUR QUAND ON CLIC SUR BUE ALORS QU'il ES EN MANUEL 
+    #     #ES QUE l'on n'a plus la bue et on veux passer en auto on n'appuie pas 2 fois
 
-
-    def bue_one_click(self):
-        if self.btn_bue_status == 4:
-            self.btn_bue_status = 0
-        self.manuel_fan_control_show()
-        if self.btn_bue_status == 0:## AVANT
-            self.position_fan_save=self.position_fan
-            self.recycle_air_fan_save=self.recycle_air_fan
-            self.manuel_auto_pareprise_fan = 0x21
-        elif self.btn_bue_status == 1: ## ARIRER
-            self.manuel_auto_pareprise_fan = 0x62
+    def bue_avant(self):
+        if self.bue_avant_status: ## BUE TRUE ALORS Désactiver
+            self.btn_bue_avant_status = "bue_avant"
+            self.bue_avant_status = False
+            ## SEND DATA
+            self.manuel_auto_pareprise_fan = 0x22
             self.position_fan=self.position_fan_save
             self.recycle_air_fan=self.recycle_air_fan_save
-        elif self.btn_bue_status == 2: ## LES DEUX
+        else:
+            self.btn_bue_avant_status = "bue_avant_ON"
+            self.bue_avant_status = True
+            ## SEND DATA
             self.position_fan_save=self.position_fan
             self.recycle_air_fan_save=self.recycle_air_fan
-            self.manuel_auto_pareprise_fan = 0x21
-        elif self.btn_bue_status == 3:## RIEN
-            self.manuel_auto_pareprise_fan = 0x62
-            self.position_fan=self.position_fan_save
-            self.recycle_air_fan=self.recycle_air_fan_save
+            self.manuel_auto_pareprise_fan = 0x21 
         
-        self.btn_bue_status = self.btn_bue_status + 1
+    def bue_arriere(self):
+        if self.bue_arriere_status: ## BUE TRUE ALORS Désactiver
+            self.btn_bue_arriere_status = "bue_arriere"
+            self.bue_arriere_status = False
+        else:
+            self.btn_bue_arriere_status = "bue_arriere_ON"
+            self.bue_arriere_status = True
+        ## SEND DATA
+        self.manuel_auto_pareprise_fan = 0x62
+        
+
+    # def bue_one_click(self):
+    #     if self.btn_bue_status == 4:
+    #         self.btn_bue_status = 0
+    #     self.manuel_fan_control_show()
+    #     if self.btn_bue_status == 0:## AVANT
+    #         self.position_fan_save=self.position_fan
+    #         self.recycle_air_fan_save=self.recycle_air_fan
+    #         self.manuel_auto_pareprise_fan = 0x21
+    #     elif self.btn_bue_status == 1: ## ARIRER
+    #         self.manuel_auto_pareprise_fan = 0x62
+    #         self.position_fan=self.position_fan_save
+    #         self.recycle_air_fan=self.recycle_air_fan_save
+    #     elif self.btn_bue_status == 2: ## LES DEUX
+    #         self.position_fan_save=self.position_fan
+    #         self.recycle_air_fan_save=self.recycle_air_fan
+    #         self.manuel_auto_pareprise_fan = 0x21
+    #     elif self.btn_bue_status == 3:## RIEN
+    #         self.manuel_auto_pareprise_fan = 0x62
+    #         self.position_fan=self.position_fan_save
+    #         self.recycle_air_fan=self.recycle_air_fan_save
+        
+    #     self.btn_bue_status = self.btn_bue_status + 1
 
     def run(self):
         while True:
@@ -777,10 +1011,11 @@ class MyThread(Thread):
             if self.manuel_auto_pareprise_fan == 0x62:### BUE à l'arriere
                 if self.manuel_auto_pareprise_fan_data_send_2_fois_max == 2:
                     self.manuel_auto_pareprise_fan_data_send_2_fois_max = 0
-                    if self.btn_bue_status == 2 or self.btn_bue_status == 4:
-                        self.manuel_auto_pareprise_fan = 0x22 ## MANUEL
-                    elif self.btn_bue_status == 3:
-                        self.manuel_auto_pareprise_fan = 0x21 ## CLIM AVANT
+                    self.manuel_auto_pareprise_fan = 0x22 ## MANUEL
+                    # if self.btn_bue_status == 2 or self.btn_bue_status == 4:
+                    #     self.manuel_auto_pareprise_fan = 0x22 ## MANUEL
+                    # elif self.btn_bue_status == 3:
+                    #     self.manuel_auto_pareprise_fan = 0x21 ## CLIM AVANT
                 self.manuel_auto_pareprise_fan_data_send_2_fois_max = self.manuel_auto_pareprise_fan_data_send_2_fois_max + 1
 
 
@@ -815,6 +1050,7 @@ class MyThread(Thread):
 print("Afficher")
 # afficher
 app = MyApp()
+
 app.window.mainloop()
 
 
