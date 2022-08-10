@@ -1,7 +1,0 @@
-manuel_auto_pareprise_fan=22
-speed_fan=00
-temp_fan_LEFT=0B
-temp_fan_RIGHT=0B
-recycle_air_fan=00
-position_fan=50
-fin
